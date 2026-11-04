@@ -112,6 +112,11 @@ small, .small { font-size: 0.85rem; }
   display: none; flex-direction: column; gap: 2px;
 }
 .nav-group.open .nav-menu { display: flex; }
+/* Invisible bridge over the gap between the button and the menu, so moving the pointer down
+   slowly never leaves the hover area and the menu stays open. */
+@media (min-width: 901px) {
+  .nav-menu::before { content: ''; position: absolute; left: 0; right: 0; top: -12px; height: 12px; }
+}
 @media (hover: hover) { .nav-group:hover .nav-menu { display: flex; } }
 .nav-menu a { display: block; padding: 8px 10px; border-radius: 8px; color: var(--text); }
 .nav-menu a:hover, .nav-menu a.active { background: var(--panel-3); text-decoration: none; }
