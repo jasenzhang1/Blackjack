@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
+import { StudyRules } from '../components/StudyRules';
 import { BLUE_RAMP, ORANGE_RAMP, inkOn, rampColor } from '../components/charts';
 import { ProofDrawer } from '../components/ProofDrawer';
 import { ActionLegend, StrategyGrid, type CellView } from '../components/StrategyGrid';
-import { Progress, Seg, fmtEV } from '../components/ui';
+import { Progress, Seg, codeFill, codeFillClass, fmtEV } from '../components/ui';
 import { type Rank } from '../engine/cards';
 import { HARD_ROWS, PAIR_ROWS, SOFT_ROWS, rowKey, type RowKey } from '../engine/hand';
 import { strategyKey } from '../engine/rules';
@@ -59,7 +60,8 @@ export function useCellRenderer(table: StrategyTable | null, view: Prefs['chartV
       };
     }
     return {
-      className: `a-${c.best}`,
+      className: `a-${c.best} ${codeFillClass(c.code)}`,
+      style: codeFill(c.code),
       content:
         view === 'ev' ? (
           <>
@@ -92,10 +94,6 @@ export default function StrategyChart() {
       <div className="page-head">
         <div>
           <h1>Basic strategy chart</h1>
-          <p>
-            Every cell is computed exactly for the rules above, not copied from a book. <strong>Click any cell</strong> to see the expected value of every play and the full
-            proof. Change the rules and the chart recomputes.
-          </p>
         </div>
         <div className="row no-print">
           <Seg
@@ -115,6 +113,7 @@ export default function StrategyChart() {
         </div>
       </div>
 
+      <StudyRules note="Pick the game you want to learn. The chart re-solves exactly for it (e.g. turn surrender off to see the no-surrender chart)." />
       {error && <div className="callout bad">Engine error: {error}</div>}
       {!table && !error && (
         <div className="panel">

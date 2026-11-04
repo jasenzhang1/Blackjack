@@ -31,32 +31,32 @@ const ROUTES: Record<string, React.ComponentType> = {
   '/math': MathPage,
 };
 
-const GROUPS: { label: string; prefix: string; items: { to: string; label: string; sub: string }[] }[] = [
+const GROUPS: { label: string; prefix: string; items: { to: string; label: string }[] }[] = [
   {
     label: 'Strategy',
     prefix: '/strategy',
     items: [
-      { to: '/strategy', label: 'Strategy chart', sub: 'Interactive chart with EV proofs' },
-      { to: '/strategy/quiz', label: 'Grid quiz', sub: 'Fill in the whole chart' },
-      { to: '/strategy/trainer', label: 'Table trainer', sub: 'Decide at a live table' },
+      { to: '/strategy', label: 'Strategy chart' },
+      { to: '/strategy/quiz', label: 'Grid quiz' },
+      { to: '/strategy/trainer', label: 'Table trainer' },
     ],
   },
   {
     label: 'Counting',
     prefix: '/counting',
     items: [
-      { to: '/counting/learn', label: 'Learn to count', sub: 'Hi-Lo from zero, with the math' },
-      { to: '/counting/drills', label: 'Drills', sub: 'Speed and accuracy' },
-      { to: '/counting/watch', label: 'Watch & count', sub: 'Count simulated players' },
-      { to: '/counting/play', label: 'Count & play', sub: 'Play, count, get graded' },
+      { to: '/counting/learn', label: 'Learn to count' },
+      { to: '/counting/drills', label: 'Drills' },
+      { to: '/counting/watch', label: 'Watch & count' },
+      { to: '/counting/play', label: 'Count & play' },
     ],
   },
   {
     label: 'Play',
     prefix: '/play',
     items: [
-      { to: '/play', label: 'Casino', sub: 'Bankroll and live coach' },
-      { to: '/reports', label: 'Report cards', sub: 'Your past sessions' },
+      { to: '/play', label: 'Casino' },
+      { to: '/reports', label: 'Report cards' },
     ],
   },
 ];
@@ -96,7 +96,6 @@ function TopNav() {
                 {g.items.map((i) => (
                   <Link key={i.to} to={i.to}>
                     {i.label}
-                    <span className="sub">{i.sub}</span>
                   </Link>
                 ))}
               </div>

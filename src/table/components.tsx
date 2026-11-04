@@ -143,7 +143,7 @@ export function InsurancePrompt({ game, seatIndex }: { game: TableGame; seatInde
   const bj = seat.hands[0] && isBlackjack(seat.hands[0].cards.map((c) => c.rank));
   useKeys(
     (k) => {
-      if (k === 'i' || k === 'y') game.insurance(true);
+      if (k === 'y') game.insurance(true);
       if (k === 'n') game.insurance(false);
     },
     [game],
@@ -154,7 +154,7 @@ export function InsurancePrompt({ game, seatIndex }: { game: TableGame; seatInde
         Dealer shows an ace. {bj ? 'Take even money (insurance on your blackjack)?' : `Insurance? Costs ${fmtMoney(seat.bet / 2)}, pays 2:1 if the dealer has blackjack.`}
       </span>
       <button className="btn" onClick={() => game.insurance(true)}>
-        {bj ? 'Even money' : 'Take insurance'} <span className="kbd">I</span>
+        {bj ? 'Even money' : 'Take insurance'} <span className="kbd">Y</span>
       </button>
       <button className="btn primary" onClick={() => game.insurance(false)}>
         No thanks <span className="kbd">N</span>

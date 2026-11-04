@@ -15,10 +15,6 @@ export default function MathPage() {
       <div className="page-head">
         <div>
           <h1>The math behind every number</h1>
-          <p>
-            How the engine computes exact expected values, with the proofs. The same derivations appear in numeric form when you click any cell of the <Link to="/strategy">strategy chart</Link>.
-            A standalone copy lives in <code>docs/MATH.md</code>.
-          </p>
         </div>
       </div>
       <article className="lesson" style={{ maxWidth: 900 }}>

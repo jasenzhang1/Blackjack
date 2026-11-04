@@ -2,6 +2,7 @@ import type { CSSProperties, PointerEvent, ReactNode } from 'react';
 import { UPCARDS, rankLabel, type Rank } from '../engine/cards';
 import { rowShortLabel, type RowKey } from '../engine/hand';
 import { cellKey } from '../engine/strategy';
+import { Tag } from './ui';
 
 export interface CellView {
   className: string;
@@ -83,28 +84,28 @@ export function ActionLegend() {
   return (
     <div className="legend">
       <span className="item">
-        <span className="tag H">H</span> Hit
+        <Tag a="H" /> Hit
       </span>
       <span className="item">
-        <span className="tag S">S</span> Stand
+        <Tag a="S" /> Stand
       </span>
       <span className="item">
-        <span className="tag D">Dh</span> Double, else hit
+        <Tag a="Dh" /> Double, else hit
       </span>
       <span className="item">
-        <span className="tag D">Ds</span> Double, else stand
+        <Tag a="Ds" /> Double, else stand
       </span>
       <span className="item">
-        <span className="tag P">P</span> Split
+        <Tag a="P" /> Split
       </span>
       <span className="item">
-        <span className="tag R">Rh</span> Surrender, else hit
+        <Tag a="Rh" /> Surrender, else hit
       </span>
       <span className="item">
-        <span className="tag R">Rs</span> Surrender, else stand
+        <Tag a="Rs" /> Surrender, else stand
       </span>
       <span className="item">
-        <span className="tag R">Rp</span> Surrender, else split
+        <Tag a="Rp" /> Surrender, else split
       </span>
     </div>
   );

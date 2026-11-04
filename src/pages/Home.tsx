@@ -61,21 +61,20 @@ export default function Home() {
             <span className="step">1</span>
             <h2 style={{ margin: 0 }}>Basic strategy</h2>
           </div>
-          <p className="text-2">The mathematically best play for every hand, and the proof of why. Then drill it until it's automatic.</p>
           <ul>
             <li>
               <Link to="/strategy">
-                Interactive chart <span>EV proofs in every cell</span>
+                Interactive chart
               </Link>
             </li>
             <li>
               <Link to="/strategy/quiz">
-                Grid quiz <span>fill in the whole chart</span>
+                Grid quiz
               </Link>
             </li>
             <li>
               <Link to="/strategy/trainer">
-                Table trainer <span>decide at a live table</span>
+                Table trainer
               </Link>
             </li>
           </ul>
@@ -85,26 +84,25 @@ export default function Home() {
             <span className="step">2</span>
             <h2 style={{ margin: 0 }}>Card counting</h2>
           </div>
-          <p className="text-2">Why removing small cards helps you, how to keep a running and true count, and when the count tells you to deviate.</p>
           <ul>
             <li>
               <Link to="/counting/learn">
-                Lessons <span>Hi-Lo from zero</span>
+                Lessons
               </Link>
             </li>
             <li>
               <Link to="/counting/drills">
-                Drills <span>speed and accuracy</span>
+                Drills
               </Link>
             </li>
             <li>
               <Link to="/counting/watch">
-                Watch & count <span>simulated players</span>
+                Watch & count
               </Link>
             </li>
             <li>
               <Link to="/counting/play">
-                Count & play <span>graded, with deviations</span>
+                Count & play
               </Link>
             </li>
           </ul>
@@ -114,21 +112,20 @@ export default function Home() {
             <span className="step">3</span>
             <h2 style={{ margin: 0 }}>Play</h2>
           </div>
-          <p className="text-2">Take a practice bankroll to the table. Turn the live coach on or off, then read your report card.</p>
           <ul>
             <li>
               <Link to="/play">
-                Casino <span>bankroll + coach</span>
+                Casino
               </Link>
             </li>
             <li>
               <Link to="/reports">
-                Report cards <span>{sessions.length} saved</span>
+                Report cards
               </Link>
             </li>
             <li>
               <Link to="/rules">
-                Rules lab <span>what each rule costs</span>
+                Rules lab
               </Link>
             </li>
           </ul>

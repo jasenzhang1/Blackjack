@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { StudyRules } from '../components/StudyRules';
 import { Check, Progress, Seg, useKeys } from '../components/ui';
 import { INFINITE_PROBS, type Rank } from '../engine/cards';
 import { HARD_ROWS, PAIR_ROWS, SOFT_ROWS, rowKey } from '../engine/hand';
@@ -184,7 +185,6 @@ export default function Trainer() {
       <div className="page-head">
         <div>
           <h1>Table trainer</h1>
-          <p>Play real hands against the dealer. Every decision is checked against the exact basic strategy for the current rules, and you see what a mistake costs.</p>
         </div>
         <div className="stat-row">
           <div className="stat">
@@ -208,6 +208,7 @@ export default function Trainer() {
         </div>
       </div>
 
+      <StudyRules note="Every decision is graded against the exact strategy for these rules." />
       <div className="panel tight row" style={{ marginBottom: 12 }}>
         <span className="muted small">Deal me:</span>
         <Seg value={filter} onChange={setFilter} options={FILTERS} label="Hand filter" />
@@ -234,11 +235,8 @@ export default function Trainer() {
         {p.kind === 'auto' && <span className="status">Dealing…</span>}
       </div>
 
-      {game.feedback && <FeedbackBanner fb={game.feedback} rules={rules} unit={prefs.unit} onWhy={() => setWhy(true)} onNext={game.holdNext ? next : undefined} />}
+      {game.feedback && <FeedbackBanner fb={game.feedback} rules={rules} unit={prefs.unit} onWhy={() => setWhy(true)} />}
       {why && game.feedback && <WhyModal fb={game.feedback} rules={rules} onClose={() => setWhy(false)} />}
-      <p className="muted small" style={{ marginTop: 12 }}>
-        Shortcuts: H hit · S stand · D double · P split · R surrender · I/N insurance · Space next. Lifetime: {lifetime.current.correct}/{lifetime.current.total} correct.
-      </p>
     </main>
   );
 }

@@ -1,7 +1,7 @@
 /**
  * A graded table session shared by Count & Play (CC-3 / 3b) and the Casino (P-1).
  */
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Check, Modal, Progress, Seg, fmtMoney, useKeys } from '../components/ui';
 import { HI_LO, getSystem, SYSTEMS } from '../engine/counting';
 import type { Action } from '../engine/ev';
@@ -29,7 +29,7 @@ interface Config {
   betHint: boolean;
 }
 
-export function SessionTable({ mode, title, intro }: { mode: 'countplay' | 'casino'; title: string; intro: ReactNode }) {
+export function SessionTable({ mode, title }: { mode: 'countplay' | 'casino'; title: string }) {
   const { rules, prefs, setPrefs } = useSettings();
   const { table, progress } = useStrategy(rules);
   const [cfg, setCfg] = useState<Config>(() => ({
@@ -67,7 +67,6 @@ export function SessionTable({ mode, title, intro }: { mode: 'countplay' | 'casi
         <div className="page-head">
           <div>
             <h1>{title}</h1>
-            <p>{intro}</p>
           </div>
         </div>
         <div className="grid-2">
@@ -281,9 +280,6 @@ function Session({ mode, title, cfg, onLeave }: { mode: 'countplay' | 'casino'; 
       <div className="page-head">
         <div>
           <h1>{title}</h1>
-          <p className="muted">
-            {mode === 'countplay' ? `Count with ${sys.name}${cfg.deviations ? ', graded on index plays (Hi-Lo true count)' : ''}.` : `Coach: ${cfg.coach}.`} Bankroll {fmtMoney(me.bankroll)} (started with {fmtMoney(cfg.bankroll)}).
-          </p>
         </div>
         <div className="row">
           <button className="btn" onClick={() => setShowReport(true)}>
@@ -377,7 +373,7 @@ function Session({ mode, title, cfg, onLeave }: { mode: 'countplay' | 'casino'; 
           </div>
           {mode === 'casino' && <CoachPanel game={game} mode={cfg.coach} showCount={cfg.showCount} systemId={HI_LO.id} />}
           <div className="panel small text-2">
-            Keys: H S D P R for plays, I/N for insurance, Space to deal.
+            Keys: H S D P R for plays, N to decline insurance (Y to take it), Space to deal.
             {mode === 'countplay' && ' Count every card you see, including the dealer\'s hole card when it is turned over. Reset to zero when the shoe is shuffled.'}
           </div>
         </div>

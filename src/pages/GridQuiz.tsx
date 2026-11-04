@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { StudyRules } from '../components/StudyRules';
 import { ProofDrawer } from '../components/ProofDrawer';
 import { StrategyGrid, type CellView } from '../components/StrategyGrid';
-import { Check, Progress, Seg, useKeys } from '../components/ui';
+import { Check, Progress, Seg, Tag, codeFill, codeFillClass, useKeys } from '../components/ui';
 import { UPCARDS, type Rank } from '../engine/cards';
 import { rowLabel, type RowKey } from '../engine/hand';
 import { rankLabel } from '../engine/cards';
@@ -148,11 +149,12 @@ export default function GridQuiz() {
     const exp = expected(k);
     if (!checked) {
       if (!a) return { className: 'blank', content: '' };
-      return { className: `a-${a[0]}`, content: a };
+      return { className: `a-${a[0]} ${codeFillClass(a)}`, style: codeFill(a), content: a };
     }
-    if (a === exp) return { className: `a-${exp[0]} right`, content: exp };
+    if (a === exp) return { className: `a-${exp[0]} right ${codeFillClass(exp)}`, style: codeFill(exp), content: exp };
     return {
-      className: `a-${exp[0]} wrong`,
+      className: `a-${exp[0]} wrong ${codeFillClass(exp)}`,
+      style: codeFill(exp),
       content: (
         <>
           {exp}
@@ -185,7 +187,6 @@ export default function GridQuiz() {
       <div className="page-head">
         <div>
           <h1>Grid quiz</h1>
-          <p>Fill in the chart from memory. Pick a play, then click or drag across cells, or use the arrow keys and type letters. The answer key is the exact strategy for the current rules.</p>
         </div>
         <div className="row">
           <Seg
@@ -205,6 +206,7 @@ export default function GridQuiz() {
         </div>
       </div>
 
+      <StudyRules note="The answer key is the exact strategy for these rules." />
       <div className="side-layout" style={{ gridTemplateColumns: proofCell ? 'minmax(0, 1fr) 440px' : undefined }}>
         <div className="panel">
           <div className="stack" style={{ gap: 18 }} onPointerUp={() => (painting.current = false)}>
@@ -246,7 +248,7 @@ export default function GridQuiz() {
                 </div>
                 <div className="row tight">
                   {palette.map((code, i) => (
-                    <button key={code} className={`btn small act ${code[0]}`} style={brush === code ? { boxShadow: '0 0 0 3px var(--gold-2)' } : { opacity: 0.8 }} onClick={() => setBrush(code)}>
+                    <button key={code} className={`btn small act ${code[0]} ${codeFillClass(code)}`} style={{ ...codeFill(code), ...(brush === code ? { boxShadow: '0 0 0 3px var(--gold-2)' } : { opacity: 0.8 }) }} onClick={() => setBrush(code)}>
                       {code} <span className="kbd">{strict ? i + 1 : code}</span>
                     </button>
                   ))}
@@ -293,7 +295,7 @@ export default function GridQuiz() {
                                   </span>
                                 </td>
                                 <td>
-                                  <span className={`tag ${expected(k)[0]}`}>{expected(k)}</span> {NAMES[expected(k)]}
+                                  <Tag a={expected(k)} /> {NAMES[expected(k)]}
                                 </td>
                               </tr>
                             );

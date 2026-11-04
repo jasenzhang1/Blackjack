@@ -67,7 +67,7 @@ opens the rules dialog.
 * Layouts are responsive. The table collapses to the dealer plus the player's seat on narrow
   screens, and the chart scrolls horizontally with a sticky first column.
 * All actions have keyboard shortcuts: `H` hit, `S` stand, `D` double, `P` split, `R` surrender,
-  `I` insurance, `Space` deal / next.
+  `N` decline insurance (`Y` take it), `Space` deal / next.
 
 ---
 

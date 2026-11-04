@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import { ACTION_NAMES, type Action, type ActionEVs } from '../engine/ev';
 import { bestOf } from '../engine/strategy';
 
@@ -49,9 +49,29 @@ export function Check({ checked, onChange, children }: { checked: boolean; onCha
   );
 }
 
+/**
+ * Fill for a strategy code. Two-letter fallback codes (Dh, Ds, Rh, Rs, Rp) are split along the
+ * y = x diagonal: the preferred play's colour in the top-left triangle, the fallback's colour in the
+ * bottom-right one.
+ */
+export function codeFill(code: string): CSSProperties | undefined {
+  if (code.length < 2) return undefined;
+  const a = code[0].toUpperCase() as Action;
+  const b = code[1].toUpperCase() as Action;
+  if (!ACTION_VAR[a] || !ACTION_VAR[b]) return undefined;
+  return { background: `linear-gradient(to bottom right, ${ACTION_VAR[a]} 50%, ${ACTION_VAR[b]} 50%)` };
+}
+
+/** Extra class for split tiles whose label sits on the dark surrender grey. */
+export const codeFillClass = (code: string): string => (code.length >= 2 && (code[0] === 'R' || code[1] === 'r') ? 'split-r' : '');
+
 export function Tag({ a }: { a: string }) {
   const k = a[0] as Action;
-  return <span className={`tag ${k}`}>{a}</span>;
+  return (
+    <span className={`tag ${k} ${codeFillClass(a)}`} style={codeFill(a)}>
+      {a}
+    </span>
+  );
 }
 
 export function Progress({ value, label }: { value: number; label?: string }) {

@@ -31,7 +31,6 @@ export default function LearnCounting() {
       <div className="page-head">
         <div>
           <h1>Learn to count cards</h1>
-          <p>Seven short lessons, from why counting works to the index plays that experts use. Every number on these pages is computed live for your rules.</p>
         </div>
       </div>
       <div className="lesson-layout">

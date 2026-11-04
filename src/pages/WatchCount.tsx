@@ -37,7 +37,6 @@ export default function WatchCount() {
       <div className="page-head">
         <div>
           <h1>Watch & count</h1>
-          <p>Simulated players play at the speed you choose. You just count. Every so often the game stops and asks for your running count (and true count).</p>
         </div>
       </div>
       <div className="panel tight row" style={{ marginBottom: 12 }}>

@@ -31,7 +31,6 @@ export default function Drills() {
       <div className="page-head">
         <div>
           <h1>Counting drills</h1>
-          <p>Short, timed exercises. Counting has to be automatic before it is useful at a real table: aim for 100% accuracy first, then speed.</p>
         </div>
         <label className="field">
           Counting system
@@ -478,6 +477,20 @@ function GroupsDrill({ sys }: { sys: CountingSystem }) {
     return () => window.clearTimeout(id);
   }, [visible, ms, cards]);
   const actual = cards ? cards.reduce((a, c) => a + sys.tags[c.rank], 0) : 0;
+  const nextGroup = () => {
+    setLast(null);
+    deal();
+  };
+  // Enter moves on to the next group once the answer has been checked.
+  useKeys(
+    (k, e) => {
+      if (k === 'enter' && last && round < total) {
+        e.preventDefault();
+        nextGroup();
+      }
+    },
+    [last, round, size],
+  );
   return (
     <div className="panel stack">
       <div className="widget-title">Count a whole group at a glance</div>
@@ -530,12 +543,9 @@ function GroupsDrill({ sys }: { sys: CountingSystem }) {
         <button
           className="btn primary"
           style={{ alignSelf: 'flex-start' }}
-          onClick={() => {
-            setLast(null);
-            deal();
-          }}
+          onClick={nextGroup}
         >
-          Next group
+          Next group <span className="kbd">Enter</span>
         </button>
       )}
       {round >= total && (

@@ -26,7 +26,6 @@ export default function Reports() {
       <div className="page-head">
         <div>
           <h1>Report cards</h1>
-          <p>Every session you play is saved here with a grade, your strategy accuracy, the money your mistakes cost, and how much of the result was luck.</p>
         </div>
       </div>
       <div className="side-layout" style={{ gridTemplateColumns: '340px minmax(0, 1fr)' }}>

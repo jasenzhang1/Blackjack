@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { RulesForm } from '../components/RulesDialog';
-import { Progress, fmtMoney, fmtPct } from '../components/ui';
+import { Progress, Tag, fmtMoney, fmtPct } from '../components/ui';
 import { rankLabel, type Rank } from '../engine/cards';
 import { rowLabel } from '../engine/hand';
 import { PRESETS, describeRules, rulesKey } from '../engine/rules';
@@ -33,7 +33,6 @@ export default function RulesLab() {
       <div className="page-head">
         <div>
           <h1>Rules lab</h1>
-          <p>Change any rule and the engine re-solves the whole game: house edge, strategy changes, and exactly how much each rule is worth.</p>
         </div>
       </div>
       <div className="grid-2">
@@ -144,10 +143,10 @@ export default function RulesLab() {
                     <td>{rowLabel(row)}</td>
                     <td>{rankLabel(Number(up) as Rank)}</td>
                     <td>
-                      <span className={`tag ${d.from[0]}`}>{d.from}</span>
+                      <Tag a={d.from} />
                     </td>
                     <td>
-                      <span className={`tag ${d.to[0]}`}>{d.to}</span>
+                      <Tag a={d.to} />
                     </td>
                   </tr>
                 );
