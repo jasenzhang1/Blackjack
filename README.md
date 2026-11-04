@@ -42,6 +42,14 @@ npm run preview    # serve the production build
 The app uses hash routing and a relative base path, so `dist/` works from any static host or
 sub-path.
 
+## Deploying (GitHub Pages)
+
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) builds the site and publishes it on
+every push to `main`. One-time setup: go to the repository's **Settings → Pages → Build and
+deployment** and set **Source** to **GitHub Actions**. The site is then served at
+**https://jasenzhang1.github.io/Blackjack/**. To redeploy without a code change, use
+**Actions → Deploy to GitHub Pages → Run workflow**.
+
 ## How the numbers are computed
 
 * **Dealer probabilities**: exact for a finite shoe. The probability of a draw sequence depends only
