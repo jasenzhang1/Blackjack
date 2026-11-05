@@ -5,7 +5,7 @@ import { Check, Progress, Seg, Tag, codeFill, codeFillClass, useKeys } from '../
 import { UPCARDS, type Rank } from '../engine/cards';
 import { rowLabel, type RowKey } from '../engine/hand';
 import { rankLabel } from '../engine/cards';
-import { rulesKey, strategyKey } from '../engine/rules';
+import { describeRules, rulesKey, strategyKey } from '../engine/rules';
 import { cellKey } from '../engine/strategy';
 import { listQuizAttempts, recordCell, saveQuizAttempt } from '../state/progress';
 import { useSettings } from '../state/settings';
@@ -24,7 +24,7 @@ function fmtTime(ms: number) {
 }
 
 export default function GridQuiz() {
-  const { rules, prefs } = useSettings();
+  const { rules, prefs, openRules } = useSettings();
   const { table, progress } = useStrategy(rules);
   const [scope, setScope] = useState<Scope>('hard');
   const [strict, setStrict] = useState(false);
@@ -41,7 +41,7 @@ export default function GridQuiz() {
   const sections = chartSections(!prefs.showRepeatedRows).filter((s) => scope === 'all' || s.id === scope);
   const rows: RowKey[] = useMemo(() => sections.flatMap((s) => s.rows), [sections]);
   const keys = useMemo(() => rows.flatMap((r) => UPCARDS.map((u) => cellKey(r, u))), [rows]);
-  const palette = strict ? STRICT : SIMPLE;
+  const palette = (strict ? STRICT : SIMPLE).filter((c) => rules.surrender !== 'none' || c[0] !== 'R');
 
   const expected = (k: string): string => {
     const c = table?.cells[k];
@@ -128,6 +128,7 @@ export default function GridQuiz() {
       if (strict && k === 'h') code = 'H';
       if (strict && k === 's') code = 'S';
       if (strict && k === 'p') code = 'P';
+      if (code && !palette.includes(code as never)) code = null;
       if (code) {
         e.preventDefault();
         const key = cellKey(rows[cursor.r], UPCARDS[cursor.c]);
@@ -137,7 +138,7 @@ export default function GridQuiz() {
       }
       if (k === 'enter' && !checked && filled > 0) check();
     },
-    [table, rows, cursor, strict, checked, filled, startAt],
+    [table, rows, cursor, strict, checked, filled, startAt, palette],
   );
 
   const cursorKey = rows[cursor.r] ? cellKey(rows[cursor.r], UPCARDS[cursor.c]) : null;
@@ -186,6 +187,17 @@ export default function GridQuiz() {
       <div className="page-head">
         <div>
           <h1>Grid quiz</h1>
+          <div className="row tight small" style={{ marginTop: 6 }}>
+            <span className="muted">Graded for:</span>
+            {describeRules(rules).map((c) => (
+              <span className="chip" key={c}>
+                {c}
+              </span>
+            ))}
+            <button className="btn ghost small" onClick={openRules}>
+              Change
+            </button>
+          </div>
         </div>
         <div className="row">
           <Seg
