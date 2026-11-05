@@ -6,6 +6,41 @@ import { useSettings } from '../state/settings';
 import { Link } from '../router';
 import { useStrategy } from '../worker/client';
 
+/** Every game and lesson, shown as buttons on the home page on phones and tablets. */
+const LAUNCHER: { label: string; items: { to: string; label: string; sub: string }[] }[] = [
+  {
+    label: 'Basic strategy',
+    items: [
+      { to: '/strategy', label: 'Strategy chart', sub: 'Every play, with proofs' },
+      { to: '/strategy/quiz', label: 'Grid quiz', sub: 'Fill in the chart' },
+      { to: '/strategy/trainer', label: 'Table trainer', sub: 'Play hands, get graded' },
+    ],
+  },
+  {
+    label: 'Card counting',
+    items: [
+      { to: '/counting/learn', label: 'Learn to count', sub: 'Seven lessons' },
+      { to: '/counting/drills', label: 'Drills', sub: 'Tags, counts, conversion' },
+      { to: '/counting/watch', label: 'Watch & count', sub: 'Count simulated players' },
+      { to: '/counting/play', label: 'Count & play', sub: 'Play while counting' },
+    ],
+  },
+  {
+    label: 'Play',
+    items: [
+      { to: '/play', label: 'Casino', sub: 'Bankroll with a coach' },
+      { to: '/reports', label: 'Report cards', sub: 'Past sessions' },
+    ],
+  },
+  {
+    label: 'Explore',
+    items: [
+      { to: '/rules', label: 'Rules lab', sub: 'House edge by rule' },
+      { to: '/math', label: 'The math', sub: 'All the proofs' },
+    ],
+  },
+];
+
 const HERO: Card[] = [
   { id: 1, face: 'A', suit: 'S', rank: 1 },
   { id: 2, face: 'K', suit: 'H', rank: 10 },
@@ -26,6 +61,31 @@ export default function Home() {
 
   return (
     <main className="page">
+      <section className="launcher">
+        <h1>
+          Learn the <em>math</em>. Master the <em>count</em>.
+        </h1>
+        {LAUNCHER.map((g) => (
+          <div key={g.label} className="launcher-group">
+            <h2>{g.label}</h2>
+            <div className="launcher-grid">
+              {g.items.map((i) => (
+                <Link key={i.to} to={i.to} className="launch-btn">
+                  {i.label}
+                  <span className="sub">{i.sub}</span>
+                </Link>
+              ))}
+              {g.label === 'Explore' && (
+                <button className="launch-btn" onClick={openRules}>
+                  Table rules
+                  <span className="sub">Set your table's rules</span>
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </section>
+
       <section className="hero">
         <div>
           <h1>

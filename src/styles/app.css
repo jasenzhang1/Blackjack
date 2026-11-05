@@ -122,13 +122,12 @@ small, .small { font-size: 0.85rem; }
 .nav-menu a:hover, .nav-menu a.active { background: var(--panel-3); text-decoration: none; }
 .nav-menu a .sub { display: block; color: var(--muted); font-size: 0.8rem; }
 .nav-menu a.active .sub { color: var(--text-2); }
-.topnav .nav-toggle { display: none; margin-left: auto; }
-@media (max-width: 900px) {
-  .topnav .nav-toggle { display: inline-flex; }
-  .nav { display: none; position: absolute; top: 56px; left: 0; right: 0; flex-direction: column; align-items: stretch; background: var(--panel); border-bottom: 1px solid var(--border); padding: 8px; max-height: calc(100vh - 56px); overflow: auto; }
-  .nav.open { display: flex; }
-  .nav-menu { position: static; display: flex; box-shadow: none; border: 0; background: transparent; padding: 0 0 6px 12px; }
-  .nav-btn { width: 100%; justify-content: flex-start; color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; padding-bottom: 2px; }
+.topnav .home-btn { display: none; margin-left: auto; }
+/* Phones and tablets (including iPhone and iPad): no dropdown menu. The top bar shows only the
+   brand and a Home button, and the home page lists every game and lesson as a button. */
+@media (max-width: 900px), (hover: none) and (pointer: coarse) {
+  .nav { display: none; }
+  .topnav .home-btn { display: inline-flex; }
 }
 
 /* ---------- rules bar ---------- */
@@ -409,6 +408,25 @@ details.acc > .acc-body { padding: 0 0 12px; }
 @media (max-width: 900px) { .hero { grid-template-columns: 1fr; } .hero-cards { display: none; } }
 .track { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 22px; }
 @media (max-width: 900px) { .track { grid-template-columns: 1fr; } }
+/* Home-page launcher: big buttons for every game and lesson, shown instead of the hero and track
+   cards on phones and tablets. */
+.launcher { display: none; padding-top: 18px; }
+.launcher h1 { font-size: 1.6rem; margin-bottom: 4px; }
+.launcher h1 em { font-style: normal; color: var(--gold-2); }
+.launcher-group { margin-top: 18px; }
+.launcher-group h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 8px; }
+.launcher-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.launch-btn {
+  display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; min-height: 64px;
+  padding: 12px 14px; border-radius: 14px; background: var(--panel); border: 1px solid var(--border-2);
+  color: var(--text); font: inherit; font-weight: 700; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.launch-btn:hover, .launch-btn:active { border-color: var(--gold); background: var(--panel-2); text-decoration: none; }
+.launch-btn .sub { font-size: 0.8rem; font-weight: 500; color: var(--muted); }
+@media (max-width: 900px), (hover: none) and (pointer: coarse) {
+  .launcher { display: block; }
+  .hero, .track { display: none; }
+}
 .track-card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
 .track-card .step { width: 32px; height: 32px; border-radius: 50%; background: var(--felt-2); color: var(--gold); display: grid; place-items: center; font-weight: 800; box-shadow: inset 0 0 0 1px #2d6b4c; }
 .track-card ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }

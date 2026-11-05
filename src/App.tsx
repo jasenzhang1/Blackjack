@@ -64,21 +64,20 @@ const GROUPS: { label: string; prefix: string; items: { to: string; label: strin
 function TopNav() {
   const path = useRoute();
   const [open, setOpen] = useState<string | null>(null);
-  const [mobile, setMobile] = useState(false);
-  useEffect(() => {
-    setOpen(null);
-    setMobile(false);
-  }, [path]);
+  useEffect(() => setOpen(null), [path]);
   return (
     <header className="topnav no-print">
       <div className="topnav-inner">
         <Link to="/" className="brand">
           <span className="brand-mark">♠</span> Blackjack Lab
         </Link>
-        <button className="btn ghost small nav-toggle" onClick={() => setMobile((m) => !m)} aria-label="Menu" aria-expanded={mobile}>
-          ☰
-        </button>
-        <nav className={`nav ${mobile ? 'open' : ''}`} aria-label="Main">
+        {/* Phones and tablets get no dropdown menu: the home page lists every game and lesson as a button. */}
+        {path !== '/' && (
+          <Link to="/" className="btn small home-btn">
+            ← Home
+          </Link>
+        )}
+        <nav className="nav" aria-label="Main">
           {GROUPS.map((g) => (
             <div
               key={g.label}
