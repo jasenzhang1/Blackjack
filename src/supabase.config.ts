@@ -13,4 +13,10 @@
 export const supabaseConfig = {
   url: 'https://xxkjtqcltfzbalsavgva.supabase.co',
   anonKey: 'sb_publishable_WJwUJMI-0wlZatRmBopnVQ_E7ABNCxe',
+  /**
+   * Google OAuth Web client ID (public). Used for Google's own sign-in button, so Google's
+   * consent screen names this site instead of the Supabase address. Its "Authorized JavaScript
+   * origins" must include the site's origin. Leave empty to use the redirect sign-in instead.
+   */
+  googleClientId: '324839758589-nb6bj2d97envv4iupnhs2h46d5iu57cj.apps.googleusercontent.com',
 };

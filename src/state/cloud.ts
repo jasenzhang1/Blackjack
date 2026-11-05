@@ -119,6 +119,67 @@ export async function signInWithGoogle(): Promise<void> {
   if (error) throw error;
 }
 
+/* ---------- Google's own sign-in button (Google Identity Services) ---------- */
+
+interface GsiId {
+  initialize(cfg: { client_id: string; callback: (r: { credential: string }) => void; nonce: string; use_fedcm_for_prompt?: boolean }): void;
+  renderButton(el: HTMLElement, opts: Record<string, unknown>): void;
+}
+declare global {
+  interface Window {
+    google?: { accounts: { id: GsiId } };
+  }
+}
+
+let gsiLoad: Promise<GsiId> | null = null;
+function loadGsi(): Promise<GsiId> {
+  gsiLoad ??= new Promise<GsiId>((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.async = true;
+    s.onload = () => (window.google?.accounts?.id ? resolve(window.google.accounts.id) : reject(new Error('Google sign-in unavailable')));
+    s.onerror = () => {
+      gsiLoad = null;
+      reject(new Error('Google sign-in unavailable'));
+    };
+    document.head.appendChild(s);
+  });
+  return gsiLoad;
+}
+
+async function sha256Hex(text: string): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+export const googleButtonEnabled = Boolean(supabaseConfig.googleClientId);
+
+/**
+ * Renders Google's sign-in button into `el`. Google returns an ID token, which Supabase exchanges
+ * for a session (the hashed nonce goes to Google, the raw one to Supabase). Rejects if Google's
+ * script can't load, so the caller can fall back to the redirect flow.
+ */
+export async function renderGoogleButton(el: HTMLElement, width: number, onError: (msg: string) => void): Promise<void> {
+  const gsi = await loadGsi();
+  const raw = Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('');
+  const hashed = await sha256Hex(raw);
+  gsi.initialize({
+    client_id: supabaseConfig.googleClientId,
+    nonce: hashed,
+    callback: async ({ credential }) => {
+      try {
+        const sb = await client();
+        const { error } = await sb.auth.signInWithIdToken({ provider: 'google', token: credential, nonce: raw });
+        if (error) throw error;
+      } catch (e) {
+        onError(friendly(e));
+      }
+    },
+  });
+  el.replaceChildren();
+  gsi.renderButton(el, { type: 'standard', theme: 'filled_black', size: 'large', shape: 'pill', text: 'continue_with', logo_alignment: 'center', width: Math.min(400, Math.round(width)) });
+}
+
 export async function signInWithEmail(email: string, password: string): Promise<void> {
   const sb = await client();
   const { error } = await sb.auth.signInWithPassword({ email, password });

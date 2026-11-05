@@ -136,6 +136,7 @@ small, .small { font-size: 0.85rem; }
 
 /* ---------- account ---------- */
 .account-btn .btn { gap: 8px; }
+.gsi-btn { display: flex; justify-content: center; min-height: 44px; color-scheme: normal; }
 .account-name { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 900px) { .account-name { display: none; } }
 .guest-reminder {

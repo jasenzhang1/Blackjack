@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { cloudEnabled, createAccount, friendly, resetPassword, setNewPassword, signInWithEmail, signInWithGoogle, signOutCloud, useCloud } from '../state/cloud';
+import { cloudEnabled, googleButtonEnabled, renderGoogleButton, createAccount, friendly, resetPassword, setNewPassword, signInWithEmail, signInWithGoogle, signOutCloud, useCloud } from '../state/cloud';
 import { Modal } from './ui';
 
 function GoogleLogo() {
@@ -11,6 +11,28 @@ function GoogleLogo() {
       <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z" />
     </svg>
   );
+}
+
+/** Google's own button when it loads; otherwise our button using the redirect sign-in. */
+function GoogleSignIn({ busy, onRedirect, onError }: { busy: boolean; onRedirect: () => void; onError: (msg: string) => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [fallback, setFallback] = useState(!cloudEnabled || !googleButtonEnabled);
+  useEffect(() => {
+    if (fallback || !ref.current) return;
+    let live = true;
+    renderGoogleButton(ref.current, ref.current.clientWidth || 360, (m) => live && onError(m)).catch(() => live && setFallback(true));
+    return () => {
+      live = false;
+    };
+  }, [fallback, onError]);
+  if (fallback) {
+    return (
+      <button className="btn big" onClick={onRedirect} disabled={busy}>
+        <GoogleLogo /> Continue with Google
+      </button>
+    );
+  }
+  return <div ref={ref} className="gsi-btn" />;
 }
 
 function AuthModal({ onClose }: { onClose: () => void }) {
@@ -43,9 +65,7 @@ function AuthModal({ onClose }: { onClose: () => void }) {
       <div className="stack">
         {!cloudEnabled && <div className="callout small">Accounts aren't connected yet. Sign-in will work once the site's Supabase project is set up.</div>}
         <fieldset disabled={!cloudEnabled} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }} className="stack">
-        <button className="btn big" onClick={() => run(signInWithGoogle)} disabled={busy}>
-          <GoogleLogo /> Continue with Google
-        </button>
+        <GoogleSignIn busy={busy} onRedirect={() => run(signInWithGoogle)} onError={setError} />
         <div className="row" style={{ gap: 10 }}>
           <span className="grow" style={{ height: 1, background: 'var(--border)' }} />
           <span className="muted small">or</span>
