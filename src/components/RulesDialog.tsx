@@ -61,11 +61,12 @@ export function RulesForm({ value, onChange }: { value: Rules; onChange: (r: Rul
         <Seg value={value.maxSplitHands} onChange={(v) => set({ maxSplitHands: v })} options={[2, 3, 4].map((n) => ({ value: n, label: `${n} hands` }))} />
       </div>
       <div className="field">
-        Aces after splitting
-        <div className="row tight">
-          <Seg value={value.resplitAces ? 'y' : 'n'} onChange={(v) => set({ resplitAces: v === 'y' })} options={[{ value: 'n', label: 'No resplit' }, { value: 'y', label: 'Resplit (RSA)' }]} />
-          <Seg value={value.hitSplitAces ? 'y' : 'n'} onChange={(v) => set({ hitSplitAces: v === 'y' })} options={[{ value: 'n', label: 'One card' }, { value: 'y', label: 'May hit' }]} />
-        </div>
+        Split ace gets another ace
+        <Seg value={value.resplitAces ? 'y' : 'n'} onChange={(v) => set({ resplitAces: v === 'y' })} options={[{ value: 'n', label: 'No resplit' }, { value: 'y', label: 'May resplit' }]} />
+      </div>
+      <div className="field">
+        Cards on each split ace
+        <Seg value={value.hitSplitAces ? 'y' : 'n'} onChange={(v) => set({ hitSplitAces: v === 'y' })} options={[{ value: 'n', label: 'One card only' }, { value: 'y', label: 'May hit' }]} />
       </div>
       <div className="field">
         Dealer hole card

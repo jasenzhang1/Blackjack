@@ -81,11 +81,12 @@ export type ChartSection = { id: 'hard' | 'soft' | 'pair'; caption: string; rows
  * The chart's sections. Hard 4 (only 2,2) and soft 12 (only A,A) repeat a pair row played without
  * splitting, so they are hidden unless `hideRedundant` is false.
  */
+/** Chart rows run from the highest hand at the top to the lowest at the bottom (A,A first for pairs). */
 export function chartSections(hideRedundant: boolean): ChartSection[] {
   return [
-    { id: 'hard', caption: 'Hard totals', rows: (hideRedundant ? HARD_ROWS : ALL_HARD_ROWS).map((n) => rowKey('hard', n)) },
-    { id: 'soft', caption: 'Soft totals (ace counted as 11)', rows: (hideRedundant ? SOFT_ROWS : ALL_SOFT_ROWS).map((n) => rowKey('soft', n)) },
-    { id: 'pair', caption: 'Pairs', rows: PAIR_ROWS.map((n) => rowKey('pair', n)) },
+    { id: 'hard', caption: 'Hard totals', rows: (hideRedundant ? HARD_ROWS : ALL_HARD_ROWS).map((n) => rowKey('hard', n)).reverse() },
+    { id: 'soft', caption: 'Soft totals (ace counted as 11)', rows: (hideRedundant ? SOFT_ROWS : ALL_SOFT_ROWS).map((n) => rowKey('soft', n)).reverse() },
+    { id: 'pair', caption: 'Pairs', rows: PAIR_ROWS.map((n) => rowKey('pair', n)).reverse() },
   ];
 }
 
