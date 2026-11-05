@@ -2,7 +2,16 @@ import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import { ACTION_NAMES, type Action, type ActionEVs } from '../engine/ev';
 import { bestOf } from '../engine/strategy';
 
-export function Modal({ title, onClose, children, footer, narrow }: { title: ReactNode; onClose: () => void; children: ReactNode; footer?: ReactNode; narrow?: boolean }) {
+/** Large close (✕) button for popups, kept at the top right. */
+export function CloseButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button className="btn ghost close-x" onClick={onClick} aria-label="Close">
+      ✕
+    </button>
+  );
+}
+
+export function Modal({ title, onClose, onBack, children, footer, narrow }: { title: ReactNode; onClose: () => void; onBack?: () => void; children: ReactNode; footer?: ReactNode; narrow?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -16,10 +25,13 @@ export function Modal({ title, onClose, children, footer, narrow }: { title: Rea
     <div className="modal-back" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className={`modal ${narrow ? 'narrow' : ''}`} role="dialog" aria-modal="true" tabIndex={-1} ref={ref}>
         <div className="modal-head">
+          {onBack && (
+            <button className="btn ghost back-btn" onClick={onBack} aria-label="Back">
+              ‹ Back
+            </button>
+          )}
           <h2>{title}</h2>
-          <button className="btn ghost small" onClick={onClose} aria-label="Close">
-            ✕
-          </button>
+          <CloseButton onClick={onClose} />
         </div>
         <div className="modal-body">{children}</div>
         {footer && <div className="modal-foot">{footer}</div>}

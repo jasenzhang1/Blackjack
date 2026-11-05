@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { StudyRules } from '../components/StudyRules';
 import { ProofDrawer } from '../components/ProofDrawer';
 import { StrategyGrid, type CellView } from '../components/StrategyGrid';
 import { Check, Progress, Seg, Tag, codeFill, codeFillClass, useKeys } from '../components/ui';
@@ -205,8 +204,6 @@ export default function GridQuiz() {
           </Check>
         </div>
       </div>
-
-      <StudyRules note="The answer key is the exact strategy for these rules." />
       <div className="side-layout" style={{ gridTemplateColumns: proofCell ? 'minmax(0, 1fr) 440px' : undefined }}>
         <div className="panel">
           <div className="stack" style={{ gap: 18 }} onPointerUp={() => (painting.current = false)}>

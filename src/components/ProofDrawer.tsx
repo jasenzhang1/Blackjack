@@ -13,7 +13,7 @@ import type { Cell, StrategyTable } from '../engine/strategy';
 import { useEngine } from '../worker/client';
 import { RankCards } from './PlayingCard';
 import { TeX } from './TeX';
-import { EVBars, Modal, Tag, fmtEV, fmtPct } from './ui';
+import { CloseButton, EVBars, Modal, Tag, fmtEV, fmtPct } from './ui';
 
 /** A probability or EV as a percent inside a TeX formula. */
 const tp = (x: number) => `${x < 0 ? '-' : ''}${Math.abs(x * 100).toFixed(2)}\\%`;
@@ -38,11 +38,9 @@ export function ProofDrawer({ table, cell, onClose }: { table: StrategyTable; ce
 
   return (
     <aside className="panel drawer proof" aria-label="Expected value of each play">
-      <div className="panel-title">
+      <div className="panel-title drawer-head">
         <h3>{title}</h3>
-        <button className="btn ghost small" onClick={onClose} aria-label="Close">
-          ✕
-        </button>
+        <CloseButton onClick={onClose} />
       </div>
       <div className="verdict">
         <div className="row between">
@@ -66,13 +64,13 @@ export function ProofDrawer({ table, cell, onClose }: { table: StrategyTable; ce
         </p>
       </section>
 
-      {play && <PlayProofModal rules={table.rules} cell={cell} play={play} onClose={() => setPlay(null)} />}
+      {play && <PlayProofModal rules={table.rules} cell={cell} play={play} onBack={() => setPlay(null)} onClose={onClose} />}
     </aside>
   );
 }
 
 /** Second popup: the full derivation of one play's EV for a chart cell. */
-function PlayProofModal({ rules, cell, play, onClose }: { rules: Rules; cell: Cell; play: Action; onClose: () => void }) {
+function PlayProofModal({ rules, cell, play, onBack, onClose }: { rules: Rules; cell: Cell; play: Action; onBack: () => void; onClose: () => void }) {
   const [compIdx, setCompIdx] = useState(0);
   const [stack, setStack] = useState<Rank[][]>([]);
   const { kind } = parseRow(cell.row);
@@ -80,7 +78,7 @@ function PlayProofModal({ rules, cell, play, onClose }: { rules: Rules; cell: Ce
   const comp = comps[Math.min(compIdx, comps.length - 1)];
   const drill = stack[stack.length - 1];
   return (
-    <Modal title={`${ACTION_NAMES[play]}: ${rowLabel(cell.row)} vs dealer ${rankLabel(cell.up)} (${fmtEV(cell.ev[play])})`} onClose={onClose}>
+    <Modal title={`${ACTION_NAMES[play]}: ${rowLabel(cell.row)} vs dealer ${rankLabel(cell.up)} (${fmtEV(cell.ev[play])})`} onBack={onBack} onClose={onClose}>
       <div className="proof">
         {comps.length > 1 && (
           <div style={{ marginBottom: 12 }}>

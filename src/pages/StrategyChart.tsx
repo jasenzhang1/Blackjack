@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { StudyRules } from '../components/StudyRules';
 import { BLUE_RAMP, ORANGE_RAMP, inkOn, rampColor } from '../components/charts';
 import { ProofDrawer } from '../components/ProofDrawer';
 import { ActionLegend, StrategyGrid, type CellView } from '../components/StrategyGrid';
@@ -86,6 +85,7 @@ export default function StrategyChart() {
   const { rules, prefs, setPrefs } = useSettings();
   const { table, progress, error } = useStrategy(rules);
   const [sel, setSel] = useState<string | null>(null);
+  const [tab, setTab] = useState<'hard' | 'soft' | 'pair'>('hard');
   const render = useCellRenderer(table, prefs.chartView);
   const cell = table && sel ? table.cells[sel] : null;
 
@@ -112,8 +112,6 @@ export default function StrategyChart() {
           </button>
         </div>
       </div>
-
-      <StudyRules note="Pick the game you want to learn. The chart re-solves exactly for it (e.g. turn surrender off to see the no-surrender chart)." />
       {error && <div className="callout bad">Engine error: {error}</div>}
       {!table && !error && (
         <div className="panel">
@@ -127,9 +125,24 @@ export default function StrategyChart() {
       {table && (
         <div className={`chart-layout ${cell ? '' : 'no-drawer'}`}>
           <div className="panel">
+            {/* Phones and tablets show one chart at a time, picked with these tabs. */}
+            <div className="chart-tabs no-print">
+              <Seg
+                label="Chart"
+                value={tab}
+                onChange={setTab}
+                options={[
+                  { value: 'hard', label: 'Hard totals' },
+                  { value: 'soft', label: 'Soft totals' },
+                  { value: 'pair', label: 'Pairs' },
+                ]}
+              />
+            </div>
             <div className="stack" style={{ gap: 18 }}>
               {CHART_SECTIONS.map((s) => (
-                <StrategyGrid key={s.id} caption={s.caption} rows={s.rows} cell={render} selected={sel} onCell={(row, up) => setSel(cellKey(row, up))} />
+                <div key={s.id} className={`chart-sec ${s.id === tab ? 'on' : ''}`}>
+                  <StrategyGrid caption={s.caption} rows={s.rows} cell={render} selected={sel} onCell={(row, up) => setSel(cellKey(row, up))} />
+                </div>
               ))}
             </div>
             <div style={{ marginTop: 16 }} className="stack">

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { StudyRules } from '../components/StudyRules';
 import { Check, Progress, Seg, useKeys } from '../components/ui';
 import { INFINITE_PROBS, type Rank } from '../engine/cards';
 import { HARD_ROWS, PAIR_ROWS, SOFT_ROWS, rowKey } from '../engine/hand';
@@ -207,8 +206,6 @@ export default function Trainer() {
           </div>
         </div>
       </div>
-
-      <StudyRules note="Every decision is graded against the exact strategy for these rules." />
       <div className="panel tight row" style={{ marginBottom: 12 }}>
         <span className="muted small">Deal me:</span>
         <Seg value={filter} onChange={setFilter} options={FILTERS} label="Hand filter" />
