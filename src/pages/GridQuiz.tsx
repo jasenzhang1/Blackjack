@@ -36,7 +36,7 @@ export default function GridQuiz() {
   const [startAt, setStartAt] = useState<number | null>(null);
   const [now, setNow] = useState(Date.now());
   const [elapsed, setElapsed] = useState<number | null>(null);
-  const painting = useRef(false);
+  const painting = useRef<false | 'paint' | 'erase'>(false);
 
   const sections = chartSections(!prefs.showRepeatedRows).filter((s) => scope === 'all' || s.id === scope);
   const rows: RowKey[] = useMemo(() => sections.flatMap((s) => s.rows), [sections]);
@@ -74,6 +74,15 @@ export default function GridQuiz() {
     if (checked) return;
     if (!startAt) setStartAt(Date.now());
     setAnswers((a) => ({ ...a, [k]: v }));
+  };
+
+  const clear = (k: string) => {
+    if (checked) return;
+    setAnswers((a) => {
+      const next = { ...a };
+      delete next[k];
+      return next;
+    });
   };
 
   const filled = keys.filter((k) => answers[k]).length;
@@ -122,6 +131,21 @@ export default function GridQuiz() {
       if (k === 'arrowleft') return move(0, -1);
       if (k === 'arrowdown') return move(1, 0);
       if (k === 'arrowup') return move(-1, 0);
+      if ((k === 'backspace' || k === 'delete') && !checked) {
+        e.preventDefault();
+        let { r, c } = cursor;
+        // Backspace on an empty cell steps back one cell first, like deleting text.
+        if (k === 'backspace' && !answers[cellKey(rows[r], UPCARDS[c])] && (r > 0 || c > 0)) {
+          c--;
+          if (c < 0) {
+            c = 9;
+            r--;
+          }
+          setCursor({ r, c });
+        }
+        clear(cellKey(rows[r], UPCARDS[c]));
+        return;
+      }
       let code: string | null = null;
       if (!strict && (SIMPLE as readonly string[]).includes(k.toUpperCase())) code = k.toUpperCase();
       if (strict && /^[1-8]$/.test(k)) code = STRICT[Number(k) - 1];
@@ -138,7 +162,7 @@ export default function GridQuiz() {
       }
       if (k === 'enter' && !checked && filled > 0) check();
     },
-    [table, rows, cursor, strict, checked, filled, startAt, palette],
+    [table, rows, cursor, strict, checked, filled, startAt, palette, answers],
   );
 
   const cursorKey = rows[cursor.r] ? cellKey(rows[cursor.r], UPCARDS[cursor.c]) : null;
@@ -233,12 +257,17 @@ export default function GridQuiz() {
                     setProof(k);
                     return;
                   }
-                  painting.current = true;
-                  fill(k, brush);
+                  // Clicking a cell that already holds the brush's letter clears it (and a drag
+                  // started that way erases that letter).
+                  painting.current = answers[k] === brush ? 'erase' : 'paint';
+                  if (painting.current === 'erase') clear(k);
+                  else fill(k, brush);
                   setCursor({ r: rows.indexOf(row), c: UPCARDS.indexOf(up) });
                 }}
                 onCellEnter={(row, up) => {
-                  if (painting.current) fill(cellKey(row, up), brush);
+                  const k = cellKey(row, up);
+                  if (painting.current === 'paint') fill(k, brush);
+                  else if (painting.current === 'erase' && answers[k] === brush) clear(k);
                 }}
               />
             ))}
@@ -263,7 +292,7 @@ export default function GridQuiz() {
                   ))}
                 </div>
                 <div className="muted small">
-                  {strict ? 'Strict mode: Dh = double, otherwise hit. Ds = double, otherwise stand. Rh/Rs/Rp = surrender, otherwise hit/stand/split. Keys 1–8.' : 'Keys H S D P R fill the highlighted cell and move right.'}
+                  {strict ? 'Strict mode: Dh = double, otherwise hit. Ds = double, otherwise stand. Rh/Rs/Rp = surrender, otherwise hit/stand/split. Keys 1–8. Backspace clears.' : 'Keys H S D P R fill the highlighted cell and move right. Backspace clears.'}
                 </div>
                 <Progress value={filled / keys.length} label={`${filled} of ${keys.length} cells filled`} />
                 <div className="row">

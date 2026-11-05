@@ -28,7 +28,7 @@ function chipFor(amount: number): number {
   return best;
 }
 
-function SeatView({ seat, table, human, showResult }: { seat: Seat; table: Table; human: boolean; showResult: boolean }) {
+function SeatView({ seat, table, human, showResult, noMoney }: { seat: Seat; table: Table; human: boolean; showResult: boolean; noMoney?: boolean }) {
   const p = seat.player;
   const turn = table.turn && table.turn.seat === seat.index;
   if (!p) return <div className="seat empty bot-seat" aria-hidden />;
@@ -41,36 +41,40 @@ function SeatView({ seat, table, human, showResult }: { seat: Seat; table: Table
             <div key={i} className={`seat-hand ${active ? 'active' : ''}`}>
               <HandView cards={h.cards} size={human ? undefined : 'sm'} />
               <div className="row tight" style={{ justifyContent: 'center' }}>
-                <span className="betspot">
-                  <span className={`pokerchip mini c${chipFor(h.bet)}`} />
-                  {fmtMoney(h.bet)}
-                  {h.doubled && <span className="muted"> ×2</span>}
-                </span>
+                {noMoney ? (
+                  h.doubled && <span className="betspot">Doubled</span>
+                ) : (
+                  <span className="betspot">
+                    <span className={`pokerchip mini c${chipFor(h.bet)}`} />
+                    {fmtMoney(h.bet)}
+                    {h.doubled && <span className="muted"> ×2</span>}
+                  </span>
+                )}
                 {showResult && h.result && <span className={`result ${h.result}`}>{h.result === 'blackjack' ? 'Blackjack' : h.result}</span>}
               </div>
             </div>
           );
         })}
-        {seat.hands.length === 0 && seat.bet > 0 && table.phase === 'betting' && (
+        {!noMoney && seat.hands.length === 0 && seat.bet > 0 && table.phase === 'betting' && (
           <span className="betspot">
             <span className={`pokerchip mini c${chipFor(seat.bet)}`} /> {fmtMoney(seat.bet)}
           </span>
         )}
       </div>
-      {seat.insurance > 0 && <span className="chip gold">Insured {fmtMoney(seat.insurance)}</span>}
+      {seat.insurance > 0 && <span className="chip gold">{noMoney ? 'Insured' : `Insured ${fmtMoney(seat.insurance)}`}</span>}
       <div className="nameplate">
         <span className="avatar" style={{ background: human ? 'var(--gold)' : p.avatar ?? '#9bb' }}>
           {p.name[0]}
         </span>
         {p.name}
-        {human && <span className="muted num"> · {fmtMoney(p.bankroll)}</span>}
+        {human && !noMoney && <span className="muted num"> · {fmtMoney(p.bankroll)}</span>}
         {!human && p.style && <span className="muted"> · {p.style === 'pro' ? 'BS' : p.style}</span>}
       </div>
     </div>
   );
 }
 
-export function TableView({ game, humanSeat, showDecks = false, label = 'Blackjack pays 3 to 2' }: { game: TableGame; humanSeat: number | null; showDecks?: boolean; label?: string }) {
+export function TableView({ game, humanSeat, showDecks = false, label = 'Blackjack pays 3 to 2', noMoney = false }: { game: TableGame; humanSeat: number | null; showDecks?: boolean; label?: string | null; noMoney?: boolean }) {
   const t = game.t;
   const holeDown = t.dealer.length >= 2 && !t.holeRevealed;
   const shoeFrac = t.shoe.length / t.shoeSize;
@@ -98,10 +102,10 @@ export function TableView({ game, humanSeat, showDecks = false, label = 'Blackja
           {showDecks && <span className="num">{(game.cardsUnseen / 52).toFixed(1)} decks left</span>}
         </div>
       </div>
-      <div className="felt-text">{label}</div>
+      {label && <div className="felt-text">{label}</div>}
       <div className="seats">
         {order.map((s) => (
-          <SeatView key={s.index} seat={s} table={t} human={s.index === humanSeat} showResult={t.phase === 'done'} />
+          <SeatView key={s.index} seat={s} table={t} human={s.index === humanSeat} showResult={t.phase === 'done'} noMoney={noMoney} />
         ))}
       </div>
     </div>
@@ -308,7 +312,7 @@ const fmtNum = (x: number) => (Number.isInteger(x) ? (x > 0 ? `+${x}` : String(x
 
 // --------------------------------------------------------------------------------------------
 
-export function FeedbackBanner({ fb, rules, unit, onNext, onWhy }: { fb: Feedback; rules: Rules; unit: number; onNext?: () => void; onWhy?: () => void }) {
+export function FeedbackBanner({ fb, rules, unit, onNext, onWhy, bars = true, money = true }: { fb: Feedback; rules: Rules; unit: number; onNext?: () => void; onWhy?: () => void; bars?: boolean; money?: boolean }) {
   const actName = (a: string) => (a === 'I' ? 'take insurance' : a === 'N' ? (fb.kind === 'insurance' ? 'decline insurance' : 'play on') : ACTION_NAMES[a as Action].toLowerCase());
   const hand = fb.cards.length ? `${describeHand(fb.cards)} vs ${rankText(fb.up)}` : '';
   return (
@@ -323,7 +327,7 @@ export function FeedbackBanner({ fb, rules, unit, onNext, onWhy }: { fb: Feedbac
             The right play is <strong>{actName(fb.correct)}</strong>
             {fb.evLoss > 0 && (
               <>
-                , and your choice gives up <strong>{fmtPct(fb.evLoss, 2)}</strong> of the bet ({fmtMoney(fb.evLoss * (fb.bet || unit))} on your {fmtMoney(fb.bet || unit)} bet)
+                , and your choice gives up <strong>{fmtPct(fb.evLoss, 2)}</strong> of the bet{money && ` (${fmtMoney(fb.evLoss * (fb.bet || unit))} on your ${fmtMoney(fb.bet || unit)} bet)`}
               </>
             )}
             . {fb.deviation && fb.correct !== fb.basic ? `Count play: ${describeDeviation(fb.deviation, rules)} (TC ${fb.tc.toFixed(1)}).` : fb.kind === 'insurance' ? fb.reason : ''}
@@ -334,7 +338,7 @@ export function FeedbackBanner({ fb, rules, unit, onNext, onWhy }: { fb: Feedbac
             Nice deviation: {describeDeviation(fb.deviation, rules)} (TC {fb.tc.toFixed(1)}).
           </div>
         )}
-        {Object.keys(fb.ev).length > 1 && fb.kind === 'play' && (
+        {bars && Object.keys(fb.ev).length > 1 && fb.kind === 'play' && (
           <div style={{ marginTop: 8, maxWidth: 520 }}>
             <EVBars ev={fb.ev} highlight={fb.correct as Action} />
             <div className="muted small" style={{ marginTop: 4 }}>

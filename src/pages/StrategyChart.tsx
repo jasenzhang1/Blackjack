@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { BLUE_RAMP, ORANGE_RAMP, inkOn, rampColor } from '../components/charts';
+import { MemoryTricks } from '../components/MemoryTricks';
 import { ProofDrawer } from '../components/ProofDrawer';
 import { ActionLegend, StrategyGrid, type CellView } from '../components/StrategyGrid';
 import { Progress, Seg, codeFill, codeFillClass, fmtEV } from '../components/ui';
@@ -181,6 +182,9 @@ export default function StrategyChart() {
           {cell && <ProofDrawer key={sel!} table={table} cell={cell} onClose={() => setSel(null)} />}
         </div>
       )}
+      <div className="no-print" style={{ marginTop: 18 }}>
+        <MemoryTricks />
+      </div>
     </main>
   );
 }

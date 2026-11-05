@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Progress, Seg, useKeys } from '../components/ui';
-import { INFINITE_PROBS, type Rank } from '../engine/cards';
-import { HARD_ROWS, PAIR_ROWS, SOFT_ROWS, rowKey } from '../engine/hand';
+import { Check, Modal, Progress, Seg, useKeys } from '../components/ui';
+import { INFINITE_PROBS, rankText, type Rank } from '../engine/cards';
+import { ACTION_NAMES, type Action } from '../engine/ev';
+import { HARD_ROWS, PAIR_ROWS, SOFT_ROWS, handValue, rowKey } from '../engine/hand';
 import { strategyKey } from '../engine/rules';
 import { mulberry32, randomSeed, weightedIndex } from '../engine/rng';
 import { cellKey, type StrategyTable } from '../engine/strategy';
@@ -112,6 +113,7 @@ export default function Trainer() {
   const [decisionOnly, setDecisionOnly] = useState(false);
   const [autoNext, setAutoNext] = useState(true);
   const [why, setWhy] = useState(false);
+  const [optsOpen, setOptsOpen] = useState(false);
   const seed = useRef(randomSeed());
   const rig = useMemo(() => (table ? makeRig(table, filter, seed.current++) : null), [table, filter]);
 
@@ -153,6 +155,35 @@ export default function Trainer() {
     }
   });
 
+  // Decision timing: the clock starts when the game starts waiting for a decision (the buttons
+  // appear, after the deal animation) and stops when the decision is recorded.
+  const promptKey =
+    p.kind === 'action'
+      ? `${game.t.roundId}:a:${p.seat}:${p.hand}:${game.t.seats[p.seat].hands[p.hand].cards.length}`
+      : p.kind === 'insurance' || p.kind === 'early'
+        ? `${game.t.roundId}:${p.kind}`
+        : null;
+  const promptAt = useRef<number | null>(null);
+  const timedCount = useRef(0);
+  const [times, setTimes] = useState<Record<string, number>>({});
+  // Declared before the prompt effect so it reads the start time of the decision just made.
+  useEffect(() => {
+    if (plays.length <= timedCount.current) return;
+    const fresh = plays.slice(timedCount.current);
+    timedCount.current = plays.length;
+    const start = promptAt.current;
+    promptAt.current = null;
+    if (start == null) return;
+    const ms = performance.now() - start;
+    setTimes((t) => ({ ...t, [fresh[0].id]: ms }));
+  }, [plays.length, plays]);
+  useEffect(() => {
+    promptAt.current = promptKey ? performance.now() : null;
+  }, [promptKey]);
+  const timed = plays.filter((d) => times[d.id] != null && times[d.id] <= MAX_MS);
+  const avgMs = timed.length ? timed.reduce((s, d) => s + times[d.id], 0) / timed.length : null;
+  const [detailsOpen, setDetailsOpen] = useState(false);
+
   const waiting = p.kind === 'betting' || p.kind === 'done';
   const next = () => {
     if (game.holdNext) game.continueAfterMistake();
@@ -179,61 +210,216 @@ export default function Trainer() {
     );
   }
 
+  const filterLabel = FILTERS.find((f) => f.value === filter)?.label;
+
   return (
-    <main className="page">
-      <div className="page-head">
-        <div>
-          <h1>Table trainer</h1>
+    <main className="page trainer-page">
+      <div className="trainer-head">
+        <h1>Table trainer</h1>
+        <button className="btn small ghost" onClick={() => setOptsOpen(true)} title="Practice settings">
+          ⚙ {filterLabel}
+        </button>
+      </div>
+
+      <div className="trainer-grid">
+        <section className="trainer-side trainer-fb" aria-label="Last play">
+          <h3>Last play</h3>
+          {game.feedback ? (
+            <FeedbackBanner fb={game.feedback} rules={rules} unit={prefs.unit} onWhy={() => setWhy(true)} bars={false} money={false} />
+          ) : (
+            <div className="muted small">Make a play and you'll see here whether it was right.</div>
+          )}
+        </section>
+
+        <div className="trainer-center">
+          <TableView game={game} humanSeat={0} label={null} noMoney />
+          <div className="dock">
+            {p.kind === 'action' && <ActionButtons avail={p.avail} onAction={(a) => game.act(a)} showKeys={prefs.showKeys} />}
+            {p.kind === 'insurance' && <InsurancePrompt game={game} seatIndex={0} />}
+            {p.kind === 'early' && <EarlyPrompt game={game} />}
+            {waiting && (
+              <button className="btn primary big" onClick={next}>
+                {game.holdNext ? 'Next hand' : p.kind === 'done' ? 'Next hand' : 'Deal'} <span className="kbd">Space</span>
+              </button>
+            )}
+            {p.kind === 'auto' && <span className="status">Dealing…</span>}
+          </div>
         </div>
-        <div className="stat-row">
-          <div className="stat">
-            <div className="k">Session</div>
-            <div className="v num">
-              {correct}/{plays.length}
+
+        <section className="trainer-side trainer-log" aria-label="Your plays">
+          <div className="trainer-stats">
+            <div title={`${correct} of ${plays.length} correct`}>
+              <div className="k">Correct</div>
+              <div className="v num">{plays.length ? `${Math.round((correct / plays.length) * 100)}%` : '—'}</div>
+              <div className="sub num">
+                {correct}/{plays.length}
+              </div>
+            </div>
+            <div>
+              <div className="k">Streak</div>
+              <div className="v num">{streak}</div>
+              <div className="sub num">best {Math.max(lifetime.current.bestStreak, streak)}</div>
+            </div>
+            <div>
+              <div className="k">Avg time</div>
+              <div className="v num">{avgMs == null ? '—' : fmtSec(avgMs)}</div>
+              <div className="sub">per decision</div>
             </div>
           </div>
-          <div className="stat">
-            <div className="k">Accuracy</div>
-            <div className="v num">{plays.length ? `${Math.round((correct / plays.length) * 100)}%` : '—'}</div>
+          <div className="row between">
+            <h3>Your plays</h3>
+            <button className="btn ghost small" onClick={() => setDetailsOpen(true)} disabled={!plays.length}>
+              Details
+            </button>
           </div>
-          <div className="stat">
-            <div className="k">Streak</div>
-            <div className="v num">{streak}</div>
-          </div>
-          <div className="stat">
-            <div className="k">Best streak</div>
-            <div className="v num">{Math.max(lifetime.current.bestStreak, streak)}</div>
-          </div>
-        </div>
-      </div>
-      <div className="panel tight row" style={{ marginBottom: 12 }}>
-        <span className="muted small">Deal me:</span>
-        <Seg value={filter} onChange={setFilter} options={FILTERS} label="Hand filter" />
-        <span className="grow" />
-        <Check checked={decisionOnly} onChange={setDecisionOnly}>
-          First decision only (fast)
-        </Check>
-        <Check checked={autoNext} onChange={setAutoNext}>
-          Auto-deal
-        </Check>
-      </div>
-
-      <TableView game={game} humanSeat={0} label={`Blackjack pays ${rules.blackjackPays === 1.5 ? '3 to 2' : rules.blackjackPays === 1.2 ? '6 to 5' : rules.blackjackPays === 1.4 ? '7 to 5' : 'even money'} · Dealer ${rules.hitSoft17 ? 'hits' : 'stands on'} soft 17`} />
-
-      <div className="dock">
-        {p.kind === 'action' && <ActionButtons avail={p.avail} onAction={(a) => game.act(a)} showKeys={prefs.showKeys} />}
-        {p.kind === 'insurance' && <InsurancePrompt game={game} seatIndex={0} />}
-        {p.kind === 'early' && <EarlyPrompt game={game} />}
-        {waiting && (
-          <button className="btn primary big" onClick={next}>
-            {game.holdNext ? 'Next hand' : p.kind === 'done' ? 'Next hand' : 'Deal'} <span className="kbd">Space</span>
-          </button>
-        )}
-        {p.kind === 'auto' && <span className="status">Dealing…</span>}
+          {plays.length === 0 ? (
+            <div className="muted small">Nothing yet.</div>
+          ) : (
+            <ol className="play-log">
+              {plays
+                .slice(-60)
+                .reverse()
+                .map((d) => (
+                  <li key={d.id} className={d.ok ? 'ok' : 'bad'}>
+                    <span className="mark">{d.ok ? '✓' : '✗'}</span>
+                    <span className="ph">
+                      {d.cards.length ? boardLabel(d) : 'Insurance'}
+                      <span className="muted">{` vs ${rankText(d.up)}`}</span>
+                    </span>
+                    <span className="act">
+                      {playName(d.taken, d.kind)}
+                      {!d.ok && <span className="fix"> → {playName(d.correct, d.kind)}</span>}
+                    </span>
+                    <span className="t num muted">{times[d.id] != null ? fmtSec(times[d.id]) : ''}</span>
+                  </li>
+                ))}
+            </ol>
+          )}
+        </section>
       </div>
 
-      {game.feedback && <FeedbackBanner fb={game.feedback} rules={rules} unit={prefs.unit} onWhy={() => setWhy(true)} />}
+      {optsOpen && (
+        <Modal title="Practice settings" onClose={() => setOptsOpen(false)} narrow>
+          <div className="stack">
+            <div className="field">
+              Deal me
+              <Seg value={filter} onChange={setFilter} options={FILTERS} label="Hand filter" />
+            </div>
+            <Check checked={decisionOnly} onChange={setDecisionOnly}>
+              First decision only (fast)
+            </Check>
+            <Check checked={autoNext} onChange={setAutoNext}>
+              Auto-deal
+            </Check>
+          </div>
+        </Modal>
+      )}
+      {detailsOpen && <StatsModal plays={plays} times={times} onClose={() => setDetailsOpen(false)} />}
       {why && game.feedback && <WhyModal fb={game.feedback} rules={rules} onClose={() => setWhy(false)} />}
     </main>
   );
+}
+
+/** Decisions slower than this (you looked away) are left out of the time averages. */
+const MAX_MS = 60_000;
+const fmtSec = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
+
+type Play = ReturnType<typeof useTableGame>['decisions'][number];
+
+/** "Hard 16", "Soft 18", "Pair of 8s" or "Insurance": the board, without the dealer's card. */
+function handType(d: Play): { group: string; label: string } {
+  if (d.kind === 'insurance' || !d.cards.length) return { group: 'Insurance', label: 'Insurance' };
+  const v = handValue(d.cards);
+  return { group: d.cards.length === 2 && d.cards[0] === d.cards[1] ? 'Pairs' : v.soft ? 'Soft' : 'Hard', label: boardLabel(d) };
+}
+
+interface Agg {
+  key: string;
+  n: number;
+  ok: number;
+  ms: number;
+  timed: number;
+}
+
+function aggregate(plays: Play[], times: Record<string, number>, keyOf: (d: Play) => string): Agg[] {
+  const m = new Map<string, Agg>();
+  for (const d of plays) {
+    const key = keyOf(d);
+    const a = m.get(key) ?? { key, n: 0, ok: 0, ms: 0, timed: 0 };
+    a.n++;
+    if (d.ok) a.ok++;
+    const t = times[d.id];
+    if (t != null && t <= MAX_MS) {
+      a.ms += t;
+      a.timed++;
+    }
+    m.set(key, a);
+  }
+  return [...m.values()];
+}
+
+function AggTable({ title, rows, first }: { title: string; rows: Agg[]; first: string }) {
+  return (
+    <div>
+      <h4 style={{ margin: '0 0 6px' }}>{title}</h4>
+      <table className="data">
+        <thead>
+          <tr>
+            <th>{first}</th>
+            <th className="num">Hands</th>
+            <th className="num">Correct</th>
+            <th className="num">Avg time</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.key}>
+              <td>{r.key}</td>
+              <td className="num">{r.n}</td>
+              <td className="num">{Math.round((r.ok / r.n) * 100)}%</td>
+              <td className="num">{r.timed ? fmtSec(r.ms / r.timed) : '—'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+const UP_ORDER = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'A'];
+
+function StatsModal({ plays, times, onClose }: { plays: Play[]; times: Record<string, number>; onClose: () => void }) {
+  const byType = aggregate(plays, times, (d) => handType(d).group).sort((a, b) => ['Hard', 'Soft', 'Pairs', 'Insurance'].indexOf(a.key) - ['Hard', 'Soft', 'Pairs', 'Insurance'].indexOf(b.key));
+  const byUp = aggregate(plays, times, (d) => rankText(d.up)).sort((a, b) => UP_ORDER.indexOf(a.key) - UP_ORDER.indexOf(b.key));
+  const spots = aggregate(plays, times, (d) => `${handType(d).label} vs ${rankText(d.up)}`)
+    .filter((a) => a.timed)
+    .sort((a, b) => b.ms / b.timed - a.ms / a.timed)
+    .slice(0, 10);
+  return (
+    <Modal title="Session details" onClose={onClose}>
+      <div className="stack" style={{ gap: 18 }}>
+        <div className="muted small">This session only. Decisions slower than a minute are left out of the time averages.</div>
+        <div className="details-grid">
+          <AggTable title="By hand type" rows={byType} first="Hand" />
+          <AggTable title="By dealer upcard" rows={byUp} first="Dealer" />
+        </div>
+        <AggTable title="Slowest spots" rows={spots} first="Spot" />
+      </div>
+    </Modal>
+  );
+}
+
+const pairRank = (r: Rank) => (r === 1 ? 'A' : r === 10 ? 'T' : String(r));
+
+/** Player hand as the chart names it: Hard 16, Soft 18, 8,8. */
+function boardLabel(d: Play): string {
+  if (d.cards.length === 2 && d.cards[0] === d.cards[1]) return `${pairRank(d.cards[0])},${pairRank(d.cards[0])}`;
+  const v = handValue(d.cards);
+  return `${v.soft ? 'Soft' : 'Hard'} ${v.total}`;
+}
+
+function playName(d: string, kind: string): string {
+  if (d === 'I') return 'Insure';
+  if (d === 'N') return kind === 'insurance' ? 'No insurance' : 'Play on';
+  return ACTION_NAMES[d as Action] ?? d;
 }

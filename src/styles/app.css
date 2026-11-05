@@ -136,6 +136,65 @@ small, .small { font-size: 0.85rem; }
 
 /* ---------- account ---------- */
 .account-btn .btn { gap: 8px; }
+/* ---------- table trainer: table in the middle, last play left, play log right ---------- */
+.trainer-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.trainer-head h1 { margin: 0; font-size: 1.5rem; }
+.trainer-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+.trainer-center { min-width: 0; }
+.trainer-center .felt { min-height: 0; }
+.trainer-center .dock { margin-top: 12px; }
+.trainer-side { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.trainer-side h3 { margin: 0; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.trainer-fb .feedback { margin: 0; flex-wrap: wrap; }
+.trainer-fb .feedback > .stack { width: 100%; }
+.trainer-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.trainer-stats .sub { color: var(--muted); font-size: 0.72rem; }
+
+.play-log .t { text-align: right; font-size: 0.78rem; }
+.play-log .ph { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.details-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+@media (max-width: 640px) { .details-grid { grid-template-columns: 1fr; } }
+.trainer-stats .k { color: var(--muted); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.trainer-stats .v { font-size: 1.1rem; font-weight: 800; }
+.play-log { list-style: none; margin: 0; padding: 0; overflow-y: auto; min-height: 0; flex: 1; max-height: 320px; }
+.play-log li { display: grid; grid-template-columns: 16px minmax(0, 1fr) 34px; grid-template-areas: "m h t" ". a a"; column-gap: 6px; row-gap: 1px; align-items: baseline; padding: 5px 2px; border-bottom: 1px solid var(--border); font-size: 0.86rem; }
+.play-log .mark { font-weight: 800; }
+.play-log li.ok .mark { color: #5fd08f; }
+.play-log li.bad .mark { color: #ff8a8a; }
+.play-log .mark { grid-area: m; }
+.play-log .ph { grid-area: h; }
+.play-log .t { grid-area: t; }
+.play-log .act { grid-area: a; font-size: 0.78rem; color: var(--text-2); }
+.play-log .fix { color: #ffb3b3; }
+@media (min-width: 1100px) {
+  /* Fit the whole trainer on one screen: no page scroll; the play log scrolls inside its panel. */
+  .app:has(.trainer-page) .footer { display: none; }
+  .trainer-page { height: calc(100dvh - 57px); display: flex; flex-direction: column; padding-bottom: 16px; overflow: hidden; }
+  .trainer-grid { grid-template-columns: 270px minmax(0, 1fr) 270px; flex: 1; min-height: 0; }
+  .trainer-side { overflow: hidden; }
+  .play-log { max-height: none; }
+  .trainer-fb { order: 0; }
+  .trainer-center { order: 1; display: flex; flex-direction: column; min-height: 0; }
+  .trainer-log { order: 2; }
+  /* The felt fills the column; cards grow with the screen height. */
+  .trainer-center .felt { flex: 1; display: flex; flex-direction: column; justify-content: space-around; --cw: clamp(56px, calc((100dvh - 420px) / 4.2), 92px); }
+  .trainer-center .seats { padding: 0 8px; margin-top: 0; }
+  .trainer-center .dealer { min-height: 0; }
+  /* Keep all five action buttons on one row. */
+  .trainer-center .dock { flex-wrap: nowrap; gap: 8px; padding: 12px; min-height: 0; }
+  .trainer-center .dock .btn.big { padding: 12px 14px; }
+  /* The guest reminder sits in the empty bottom of the left panel instead of over the buttons. */
+  .app:has(.trainer-page) .guest-reminder { right: auto; left: max(38px, calc((100vw - 1260px) / 2 + 30px)); bottom: 30px; max-width: 250px; flex-wrap: wrap; }
+  .trainer-center .dock .btn.act { min-width: 0; flex: 1 1 0; max-width: 140px; }
+  .trainer-center .dock > div { display: flex; gap: 8px; flex-wrap: nowrap; width: 100%; justify-content: center; }
+}
+@media (max-width: 1099px) {
+  .trainer-center { order: 0; }
+  .trainer-fb { order: 1; }
+  .trainer-log { order: 2; }
+}
+.tricks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 28px; }
+@media (max-width: 900px) { .tricks { grid-template-columns: 1fr; } }
 .gsi-btn { display: flex; justify-content: center; min-height: 44px; color-scheme: normal; }
 .account-name { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 900px) { .account-name { display: none; } }
