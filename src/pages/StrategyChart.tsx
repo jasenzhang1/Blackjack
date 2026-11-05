@@ -66,7 +66,7 @@ export function useCellRenderer(table: StrategyTable | null, view: Prefs['chartV
         view === 'ev' ? (
           <>
             {c.code}
-            <span className="ev">{fmtEV(c.ev[c.best], 2)}</span>
+            <span className="ev">{fmtEV(c.ev[c.best], 0)}</span>
           </>
         ) : (
           c.code

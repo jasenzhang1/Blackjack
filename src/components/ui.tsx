@@ -85,7 +85,8 @@ export function Progress({ value, label }: { value: number; label?: string }) {
   );
 }
 
-export const fmtEV = (x: number | undefined, digits = 4): string => (x === undefined || !Number.isFinite(x) ? '—' : (x >= 0 ? '+' : '−') + Math.abs(x).toFixed(digits));
+/** Expected value as a percent of the bet (e.g. −0.0581 → "−5.81%"). */
+export const fmtEV = (x: number | undefined, digits = 2): string => (x === undefined || !Number.isFinite(x) ? '—' : `${x >= 0 ? '+' : '−'}${Math.abs(x * 100).toFixed(digits)}%`);
 export const fmtPct = (x: number, digits = 2): string => `${(x * 100).toFixed(digits)}%`;
 export const fmtSignedPct = (x: number, digits = 2): string => `${x >= 0 ? '+' : '−'}${Math.abs(x * 100).toFixed(digits)}%`;
 export const fmtMoney = (x: number): string => `${x < 0 ? '−' : ''}$${Math.abs(x).toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: Math.abs(x) % 1 ? 2 : 0 })}`;
@@ -99,7 +100,7 @@ export const ACTION_HEX: Record<Action, string> = { H: '#199e70', S: '#e66767', 
  * Horizontal EV bars for each available action (diverging from 0). Identity is carried by the
  * action name + letter tag beside every bar (never colour alone); values are printed at the end.
  */
-export function EVBars({ ev, order = ['S', 'H', 'D', 'P', 'R'], highlight }: { ev: ActionEVs; order?: Action[]; highlight?: Action }) {
+export function EVBars({ ev, order = ['S', 'H', 'D', 'P', 'R'], highlight, onPick }: { ev: ActionEVs; order?: Action[]; highlight?: Action; onPick?: (a: Action) => void }) {
   const acts = order.filter((a) => ev[a] !== undefined);
   const vals = acts.map((a) => ev[a] as number);
   const lo = Math.min(0, ...vals);
@@ -124,7 +125,13 @@ export function EVBars({ ev, order = ['S', 'H', 'D', 'P', 'R'], highlight }: { e
               <span className="bar" style={{ left: `${left}%`, width: `max(2px, ${width}%)`, background: actionColor(a) }} />
             </span>
             <span className="val" role="cell">
-              {fmtEV(x)}
+              {onPick ? (
+                <button className="val-btn" onClick={() => onPick(a)} title={`Show the math for ${ACTION_NAMES[a].toLowerCase()}`}>
+                  {fmtEV(x)}
+                </button>
+              ) : (
+                fmtEV(x)
+              )}
             </span>
           </div>
         );
