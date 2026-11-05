@@ -10,7 +10,7 @@ import { cellKey } from '../engine/strategy';
 import { listQuizAttempts, recordCell, saveQuizAttempt } from '../state/progress';
 import { useSettings } from '../state/settings';
 import { useStrategy } from '../worker/client';
-import { CHART_SECTIONS } from './StrategyChart';
+import { chartSections } from './StrategyChart';
 
 type Scope = 'all' | 'hard' | 'soft' | 'pair';
 
@@ -24,7 +24,7 @@ function fmtTime(ms: number) {
 }
 
 export default function GridQuiz() {
-  const { rules } = useSettings();
+  const { rules, prefs } = useSettings();
   const { table, progress } = useStrategy(rules);
   const [scope, setScope] = useState<Scope>('hard');
   const [strict, setStrict] = useState(false);
@@ -38,7 +38,7 @@ export default function GridQuiz() {
   const [elapsed, setElapsed] = useState<number | null>(null);
   const painting = useRef(false);
 
-  const sections = CHART_SECTIONS.filter((s) => scope === 'all' || s.id === scope);
+  const sections = chartSections(prefs.hideRedundantRows).filter((s) => scope === 'all' || s.id === scope);
   const rows: RowKey[] = useMemo(() => sections.flatMap((s) => s.rows), [sections]);
   const keys = useMemo(() => rows.flatMap((r) => UPCARDS.map((u) => cellKey(r, u))), [rows]);
   const palette = strict ? STRICT : SIMPLE;

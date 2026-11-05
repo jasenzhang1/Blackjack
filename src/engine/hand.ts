@@ -73,7 +73,7 @@ export function rowLabel(key: RowKey): string {
 export function rowShortLabel(key: RowKey): string {
   const { kind, n } = parseRow(key);
   if (kind === 'hard') return String(n);
-  if (kind === 'soft') return `A,${n - 11}`;
+  if (kind === 'soft') return n === 12 ? 'A,A' : `A,${n - 11}`;
   return `${rankLabel(n as Rank)},${rankLabel(n as Rank)}`;
 }
 

@@ -4,7 +4,7 @@ import { ProofDrawer } from '../components/ProofDrawer';
 import { ActionLegend, StrategyGrid, type CellView } from '../components/StrategyGrid';
 import { Progress, Seg, codeFill, codeFillClass, fmtEV } from '../components/ui';
 import { type Rank } from '../engine/cards';
-import { HARD_ROWS, PAIR_ROWS, SOFT_ROWS, rowKey, type RowKey } from '../engine/hand';
+import { ALL_HARD_ROWS, ALL_SOFT_ROWS, HARD_ROWS, PAIR_ROWS, SOFT_ROWS, rowKey, type RowKey } from '../engine/hand';
 import { strategyKey } from '../engine/rules';
 import { cellKey, type StrategyTable } from '../engine/strategy';
 import { cellStats } from '../state/progress';
@@ -75,11 +75,19 @@ export function useCellRenderer(table: StrategyTable | null, view: Prefs['chartV
   };
 }
 
-export const CHART_SECTIONS: { id: 'hard' | 'soft' | 'pair'; caption: string; rows: RowKey[] }[] = [
-  { id: 'hard', caption: 'Hard totals', rows: HARD_ROWS.map((n) => rowKey('hard', n)) },
-  { id: 'soft', caption: 'Soft totals (ace counted as 11)', rows: SOFT_ROWS.map((n) => rowKey('soft', n)) },
-  { id: 'pair', caption: 'Pairs', rows: PAIR_ROWS.map((n) => rowKey('pair', n)) },
-];
+export type ChartSection = { id: 'hard' | 'soft' | 'pair'; caption: string; rows: RowKey[] };
+
+/**
+ * The chart's sections. Every two-card hand gets a row by default, including hard 4 (only 2,2) and
+ * soft 12 (only A,A), which repeat a pair row played without splitting. `hideRedundant` drops those.
+ */
+export function chartSections(hideRedundant: boolean): ChartSection[] {
+  return [
+    { id: 'hard', caption: 'Hard totals', rows: (hideRedundant ? HARD_ROWS : ALL_HARD_ROWS).map((n) => rowKey('hard', n)) },
+    { id: 'soft', caption: 'Soft totals (ace counted as 11)', rows: (hideRedundant ? SOFT_ROWS : ALL_SOFT_ROWS).map((n) => rowKey('soft', n)) },
+    { id: 'pair', caption: 'Pairs', rows: PAIR_ROWS.map((n) => rowKey('pair', n)) },
+  ];
+}
 
 export default function StrategyChart() {
   const { rules, prefs, setPrefs } = useSettings();
@@ -139,7 +147,7 @@ export default function StrategyChart() {
               />
             </div>
             <div className="stack" style={{ gap: 18 }}>
-              {CHART_SECTIONS.map((s) => (
+              {chartSections(prefs.hideRedundantRows).map((s) => (
                 <div key={s.id} className={`chart-sec ${s.id === tab ? 'on' : ''}`}>
                   <StrategyGrid caption={s.caption} rows={s.rows} cell={render} selected={sel} onCell={(row, up) => setSel(cellKey(row, up))} />
                 </div>

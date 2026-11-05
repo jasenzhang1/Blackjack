@@ -17,6 +17,8 @@ export interface Prefs {
   showKeys: boolean;
   /** Reduce motion (no card-flip / slide animations). */
   reduceMotion: boolean;
+  /** Hide the strategy-chart rows that repeat another row (hard 4 = 2,2 and soft 12 = A,A). */
+  hideRedundantRows: boolean;
 }
 
 export const DEFAULT_PREFS: Prefs = {
@@ -26,6 +28,7 @@ export const DEFAULT_PREFS: Prefs = {
   chartView: 'actions',
   showKeys: true,
   reduceMotion: false,
+  hideRedundantRows: false,
 };
 
 interface SettingsValue {
