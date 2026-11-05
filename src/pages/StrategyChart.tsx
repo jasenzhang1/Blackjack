@@ -78,8 +78,8 @@ export function useCellRenderer(table: StrategyTable | null, view: Prefs['chartV
 export type ChartSection = { id: 'hard' | 'soft' | 'pair'; caption: string; rows: RowKey[] };
 
 /**
- * The chart's sections. Every two-card hand gets a row by default, including hard 4 (only 2,2) and
- * soft 12 (only A,A), which repeat a pair row played without splitting. `hideRedundant` drops those.
+ * The chart's sections. Hard 4 (only 2,2) and soft 12 (only A,A) repeat a pair row played without
+ * splitting, so they are hidden unless `hideRedundant` is false.
  */
 export function chartSections(hideRedundant: boolean): ChartSection[] {
   return [
@@ -147,7 +147,7 @@ export default function StrategyChart() {
               />
             </div>
             <div className="stack" style={{ gap: 18 }}>
-              {chartSections(prefs.hideRedundantRows).map((s) => (
+              {chartSections(!prefs.showRepeatedRows).map((s) => (
                 <div key={s.id} className={`chart-sec ${s.id === tab ? 'on' : ''}`}>
                   <StrategyGrid caption={s.caption} rows={s.rows} cell={render} selected={sel} onCell={(row, up) => setSel(cellKey(row, up))} />
                 </div>

@@ -37,8 +37,8 @@ export function PrefsDialog({ onClose }: { onClose: () => void }) {
         <Check checked={prefs.showKeys} onChange={(v) => setPrefs({ showKeys: v })}>
           Show keyboard shortcuts on buttons
         </Check>
-        <Check checked={prefs.hideRedundantRows} onChange={(v) => setPrefs({ hideRedundantRows: v })}>
-          Hide repeated chart rows (hard 4 is the same hand as 2,2 and soft 12 is A,A)
+        <Check checked={prefs.showRepeatedRows} onChange={(v) => setPrefs({ showRepeatedRows: v })}>
+          Show hard 4 and soft 12 chart rows (2,2 and A,A played without splitting)
         </Check>
         <Check checked={prefs.reduceMotion} onChange={(v) => setPrefs({ reduceMotion: v })}>
           Reduce motion (no card-dealing animation)

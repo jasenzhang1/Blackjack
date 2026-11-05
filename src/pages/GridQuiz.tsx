@@ -38,7 +38,7 @@ export default function GridQuiz() {
   const [elapsed, setElapsed] = useState<number | null>(null);
   const painting = useRef(false);
 
-  const sections = chartSections(prefs.hideRedundantRows).filter((s) => scope === 'all' || s.id === scope);
+  const sections = chartSections(!prefs.showRepeatedRows).filter((s) => scope === 'all' || s.id === scope);
   const rows: RowKey[] = useMemo(() => sections.flatMap((s) => s.rows), [sections]);
   const keys = useMemo(() => rows.flatMap((r) => UPCARDS.map((u) => cellKey(r, u))), [rows]);
   const palette = strict ? STRICT : SIMPLE;
