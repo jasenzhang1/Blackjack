@@ -50,6 +50,23 @@ deployment** and set **Source** to **GitHub Actions**. The site is then served a
 **https://jasenzhang1.github.io/Blackjack/**. To redeploy without a code change, use
 **Actions → Deploy to GitHub Pages → Run workflow**.
 
+## Accounts (optional, Supabase)
+
+Without configuration, a Sign in button is shown but disabled and stats stay in the browser. To let
+people sign in with Google or email and keep their stats across devices:
+
+1. Create a project at [supabase.com](https://supabase.com) (the free plan is enough).
+2. **SQL Editor**: paste and run [`supabase/schema.sql`](supabase/schema.sql). It creates the stats tables with row-level security.
+3. **Authentication → URL Configuration**: set **Site URL** to `https://jasenzhang1.github.io/Blackjack/` and add it, plus `http://localhost:5173/`, under **Redirect URLs**.
+4. **Authentication → Sign In / Providers → Google**: enable it with a Google OAuth client ID and secret.
+   In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), create an OAuth client of type *Web application* and add Supabase's callback URL
+   (`https://<project-ref>.supabase.co/auth/v1/callback`, shown on the Google provider page) as an authorized redirect URI.
+5. **Project Settings → API**: copy the Project URL and the anon (or publishable) key into [`src/supabase.config.ts`](src/supabase.config.ts) and push.
+
+Email/password sign-in is on by default. New users must confirm their email unless you turn that off under
+**Authentication → Sign In / Providers → Email**. On sign-in, this device's progress and the account's are
+merged, and every later save syncs automatically.
+
 ## How the numbers are computed
 
 * **Dealer probabilities**: exact for a finite shoe. The probability of a draw sequence depends only

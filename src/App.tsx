@@ -1,4 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
+import { AccountButton } from './components/Account';
+import { GuestReminder } from './components/GuestReminder';
 import { RulesDialog, SettingsButtons } from './components/RulesDialog';
 import { Link, useRoute } from './router';
 import { useSettings } from './state/settings';
@@ -110,6 +112,7 @@ function TopNav() {
             </Link>
           )}
           <SettingsButtons />
+          <AccountButton />
         </div>
       </div>
     </header>
@@ -120,16 +123,24 @@ export default function App() {
   const path = useRoute();
   const { rulesDialogOpen, prefs } = useSettings();
   const Page = ROUTES[path] ?? Home;
+  // Re-mount the page when account data is synced in, so it shows the merged stats.
+  const [syncTick, setSyncTick] = useState(0);
+  useEffect(() => {
+    const on = () => setSyncTick((t) => t + 1);
+    window.addEventListener('bjlab-sync', on);
+    return () => window.removeEventListener('bjlab-sync', on);
+  }, []);
   return (
     <div className={`app ${prefs.reduceMotion ? 'reduce-motion' : ''}`}>
       <TopNav />
       <Suspense fallback={<div className="page muted">Loading…</div>}>
-        <Page key={path} />
+        <Page key={`${path}#${syncTick}`} />
       </Suspense>
       <footer className="footer no-print">
         Blackjack Lab: exact combinatorial EVs for every play. Practice money only. Card counting is a legal skill, but casinos may refuse your action.
       </footer>
       {rulesDialogOpen && <RulesDialog />}
+      <GuestReminder />
     </div>
   );
 }

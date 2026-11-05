@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { DEFAULT_RULES, rulesFromJSON, rulesToJSON, type Rules } from '../engine/rules';
 import { load, save } from './storage';
 
@@ -50,6 +50,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [rules, setRulesState] = useState<Rules>(() => rulesFromJSON(load('rules', rulesToJSON(DEFAULT_RULES))));
   const [prefs, setPrefsState] = useState<Prefs>(() => ({ ...DEFAULT_PREFS, ...load<Partial<Prefs>>('prefs', {}) }));
   const [rulesDialogOpen, setOpen] = useState(false);
+  useEffect(() => {
+    const on = () => {
+      setRulesState(rulesFromJSON(load('rules', rulesToJSON(DEFAULT_RULES))));
+      setPrefsState({ ...DEFAULT_PREFS, ...load<Partial<Prefs>>('prefs', {}) });
+    };
+    window.addEventListener('bjlab-sync', on);
+    return () => window.removeEventListener('bjlab-sync', on);
+  }, []);
 
   const setRules = useCallback((r: Rules) => {
     setRulesState(r);
