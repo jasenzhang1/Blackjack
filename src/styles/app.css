@@ -122,23 +122,23 @@ small, .small { font-size: 0.85rem; }
 .nav-menu a:hover, .nav-menu a.active { background: var(--panel-3); text-decoration: none; }
 .nav-menu a .sub { display: block; color: var(--muted); font-size: 0.8rem; }
 .nav-menu a.active .sub { color: var(--text-2); }
-.topnav .home-btn { display: none; margin-left: auto; }
+.topnav-right { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+.topnav .home-btn { display: none; margin-right: 4px; }
 /* Phones and tablets (including iPhone and iPad): no dropdown menu. The top bar shows only the
    brand and a Home button, and the home page lists every game and lesson as a button. */
 @media (max-width: 900px), (hover: none) and (pointer: coarse) {
   .nav { display: none; }
   .topnav .home-btn { display: inline-flex; }
+  .topnav-inner { gap: 8px; padding: 0 16px; }
 }
+/* Narrow phones: keep just the logo mark so Home, Table rules and Preferences fit on one line. */
+@media (max-width: 480px) { .brand-text { display: none; } }
 
-/* ---------- rules bar ---------- */
-.rulesbar { border-bottom: 1px solid var(--border); background: var(--bg-2); }
-.rulesbar-inner { max-width: 1260px; margin: 0 auto; padding: 8px 20px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+/* ---------- chips ---------- */
 .chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--border); color: var(--text-2); font-size: 0.8rem; white-space: nowrap; }
 .chip.gold { border-color: #6b5a2b; color: var(--gold-2); background: #2a2414; }
 .chip.good { border-color: #1e5c33; color: var(--good-text); background: #12291b; }
 .chip.bad { border-color: #6a2626; color: var(--bad-text); background: #2b1515; }
-.edge-pill { margin-left: auto; display: flex; align-items: baseline; gap: 6px; font-size: 0.85rem; color: var(--text-2); }
-.edge-pill strong { font-size: 1rem; color: var(--text); }
 
 /* ---------- buttons & form controls ---------- */
 .btn {

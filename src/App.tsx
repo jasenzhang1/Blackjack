@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { RulesBar, RulesDialog } from './components/RulesDialog';
+import { RulesDialog, SettingsButtons } from './components/RulesDialog';
 import { Link, useRoute } from './router';
 import { useSettings } from './state/settings';
 
@@ -69,14 +69,9 @@ function TopNav() {
     <header className="topnav no-print">
       <div className="topnav-inner">
         <Link to="/" className="brand">
-          <span className="brand-mark">♠</span> Blackjack Lab
+          <span className="brand-mark">♠</span>
+          <span className="brand-text">Blackjack Lab</span>
         </Link>
-        {/* Phones and tablets get no dropdown menu: the home page lists every game and lesson as a button. */}
-        {path !== '/' && (
-          <Link to="/" className="btn small home-btn">
-            ← Home
-          </Link>
-        )}
         <nav className="nav" aria-label="Main">
           {GROUPS.map((g) => (
             <div
@@ -107,6 +102,15 @@ function TopNav() {
             The math
           </Link>
         </nav>
+        <div className="topnav-right">
+          {/* Phones and tablets get no dropdown menu: the home page lists every game and lesson as a button. */}
+          {path !== '/' && (
+            <Link to="/" className="btn small home-btn">
+              ← Home
+            </Link>
+          )}
+          <SettingsButtons />
+        </div>
       </div>
     </header>
   );
@@ -119,7 +123,6 @@ export default function App() {
   return (
     <div className={`app ${prefs.reduceMotion ? 'reduce-motion' : ''}`}>
       <TopNav />
-      <RulesBar />
       <Suspense fallback={<div className="page muted">Loading…</div>}>
         <Page key={path} />
       </Suspense>

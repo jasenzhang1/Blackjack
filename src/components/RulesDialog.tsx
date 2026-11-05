@@ -144,31 +144,19 @@ export function RulesDialog() {
   );
 }
 
-export function RulesBar() {
-  const { rules, openRules } = useSettings();
-  const { table, progress } = useStrategy(rules);
+/** Compact rules and preferences buttons for the top bar. The rule details live in the dialogs. */
+export function SettingsButtons() {
+  const { openRules } = useSettings();
   const [prefsOpen, setPrefsOpen] = useState(false);
   return (
-    <div className="rulesbar no-print">
-      <div className="rulesbar-inner">
-        <span className="muted small">Rules:</span>
-        {describeRules(rules).map((c) => (
-          <span className={`chip ${c.startsWith('BJ 6:5') || c.startsWith('BJ 1:1') ? 'bad' : ''}`} key={c}>
-            {c}
-          </span>
-        ))}
-        <button className="btn small" onClick={openRules}>
-          Edit rules
-        </button>
-        <button className="btn small ghost" onClick={() => setPrefsOpen(true)} aria-label="Preferences" title="Preferences">
-          ⚙ Preferences
-        </button>
-        {prefsOpen && <PrefsDialog onClose={() => setPrefsOpen(false)} />}
-        <span className="edge-pill">
-          House edge{' '}
-          <strong className="num">{table ? fmtPct(table.houseEdge, 2) : `${Math.round(progress * 100)}%…`}</strong>
-        </span>
-      </div>
-    </div>
+    <>
+      <button className="btn small ghost" onClick={openRules} title="Change the table's rules">
+        Table rules
+      </button>
+      <button className="btn small ghost" onClick={() => setPrefsOpen(true)} aria-label="Preferences" title="Preferences">
+        ⚙
+      </button>
+      {prefsOpen && <PrefsDialog onClose={() => setPrefsOpen(false)} />}
+    </>
   );
 }
