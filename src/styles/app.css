@@ -221,21 +221,28 @@ table.data tr.clickable:hover td { background: var(--panel-2); }
 table.sgrid { border-collapse: separate; border-spacing: 3px; user-select: none; }
 table.sgrid caption { text-align: left; font-weight: 700; color: var(--text); padding: 4px 2px 6px; font-size: 1rem; }
 table.sgrid th { font-size: 0.82rem; color: var(--muted); font-weight: 700; padding: 0 4px; height: 26px; }
-table.sgrid th.rowh { text-align: right; padding-right: 10px; white-space: nowrap; position: sticky; left: 0; background: var(--panel); z-index: 1; color: var(--text-2); }
+table.sgrid th.rowh { text-align: right; padding-right: 10px; white-space: nowrap; position: sticky; left: 0; background: var(--panel); z-index: 5; color: var(--text-2); }
+/* The sticky row labels sit above every cell state (hover z 2, selected z 3), so a tapped or
+   selected cell never draws over them when the chart scrolls sideways on a phone. */
 table.sgrid td.cell {
   width: 50px; min-width: 50px; height: 34px; border-radius: 6px; text-align: center; vertical-align: middle;
   font-weight: 800; font-size: 0.86rem; cursor: pointer; color: var(--on-fill); position: relative;
   transition: transform 0.08s, box-shadow 0.08s;
 }
-table.sgrid td.cell:hover { transform: scale(1.07); box-shadow: 0 0 0 2px var(--text); z-index: 2; }
-table.sgrid td.cell.sel { box-shadow: 0 0 0 3px var(--gold-2); z-index: 3; }
+/* Hover only on devices with a real pointer: iOS keeps :hover stuck on the last tapped cell. */
+@media (hover: hover) { table.sgrid td.cell:hover { transform: scale(1.07); box-shadow: 0 0 0 2px var(--text); z-index: 2; } }
+/* Selection and focus rings are drawn inside the cell (inset). A ring outside the cell, or a
+   focus outline, paints over the sticky row labels when the chart is scrolled sideways. */
+table.sgrid td.cell.sel { box-shadow: inset 0 0 0 3px var(--gold-2); z-index: 3; }
+table.sgrid td.cell:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--gold); }
+table.sgrid td.cell.sel:focus-visible { box-shadow: inset 0 0 0 3px var(--gold-2); }
 table.sgrid td.cell .ev { display: block; font-size: 0.66rem; font-weight: 700; opacity: 0.85; margin-top: -2px; font-variant-numeric: tabular-nums; }
 .cell.a-H { background: var(--hit); } .cell.a-S { background: var(--stand); } .cell.a-D { background: var(--double); }
 .cell.a-P { background: var(--split); } .cell.a-R { background: var(--surrender); color: #fff !important; }
 .cell.split-r, .tag.split-r, .btn.act.split-r { color: #fff !important; text-shadow: 0 0 3px rgba(0,0,0,0.9), 0 0 1px #000; }
 .cell.blank { background: var(--panel-2); box-shadow: inset 0 0 0 1px var(--border); color: var(--text) !important; }
-.cell.cursor { box-shadow: 0 0 0 2px var(--gold) !important; }
-.cell.wrong::after { content: ''; position: absolute; inset: -2px; border-radius: 8px; box-shadow: 0 0 0 2px var(--bad-text); pointer-events: none; }
+.cell.cursor { box-shadow: inset 0 0 0 2px var(--gold) !important; }
+.cell.wrong::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 2px var(--bad-text); pointer-events: none; }
 .cell.wrong .was { position: absolute; top: 1px; right: 3px; font-size: 0.58rem; text-decoration: line-through; opacity: 0.75; }
 .cell.right::before { content: '✓'; position: absolute; top: 0; right: 3px; font-size: 0.6rem; opacity: 0.7; }
 .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 0.84rem; color: var(--text-2); align-items: center; }
@@ -248,7 +255,7 @@ table.sgrid td.cell .ev { display: block; font-size: 0.66rem; font-weight: 700; 
 .chart-layout.no-drawer { grid-template-columns: minmax(0, 1fr); }
 .drawer { position: sticky; top: 112px; max-height: calc(100vh - 128px); overflow: auto; }
 @media (max-width: 1150px) {
-  .chart-layout { grid-template-columns: 1fr; }
+  .chart-layout { grid-template-columns: minmax(0, 1fr); }
   .drawer { position: fixed; inset: auto 0 0 0; top: auto; max-height: 82vh; z-index: 60; border-radius: 16px 16px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,0.6); }
 }
 .proof section { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px; }
