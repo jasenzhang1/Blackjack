@@ -23,6 +23,7 @@ import { INFINITE_PROBS, fullShoe, type Counts, type Rank } from './cards';
 import { dealerDistribution, dealerDistributionInfinite, dealerTerms, OUT_BJ, type DealerTerms } from './dealer';
 import { canDoubleTotal, type Rules } from './rules';
 import { handValue, totalOf } from './hand';
+import { mulberry32 } from './rng';
 
 export type Action = 'H' | 'S' | 'D' | 'P' | 'R';
 export const ACTIONS: readonly Action[] = ['H', 'S', 'D', 'P', 'R'];
@@ -30,6 +31,32 @@ export const ACTION_NAMES: Record<Action, string> = { H: 'Hit', S: 'Stand', D: '
 export type ActionEVs = Partial<Record<Action, number>>;
 
 export type EVBasis = 'conditional' | 'unconditional';
+
+/** Probability distribution of a play's net result, in bets: sorted by payoff, probabilities sum to 1. */
+export type Outcomes = { x: number; p: number }[];
+
+export interface PlayDistributions {
+  dist: Partial<Record<Action, Outcomes>>;
+  /** Actions whose distribution was simulated rather than computed exactly, with the sample size. */
+  simulated: Partial<Record<Action, number>>;
+}
+
+/** Mean and standard deviation of a distribution. */
+export function outcomeStats(o: Outcomes): { mean: number; sd: number } {
+  let m = 0;
+  let m2 = 0;
+  for (const { x, p } of o) {
+    m += p * x;
+    m2 += p * x * x;
+  }
+  return { mean: m, sd: Math.sqrt(Math.max(0, m2 - m * m)) };
+}
+
+function toOutcomes(map: Map<number, number>, scale = 1): Outcomes {
+  const out: Outcomes = [];
+  for (const [x, p] of map) if (p > 1e-12) out.push({ x, p: p / scale });
+  return out.sort((a, b) => a.x - b.x);
+}
 
 export interface RootOptions {
   double: boolean;
@@ -389,6 +416,262 @@ export class EVEngine {
       nNonPair,
       nPairFinal,
     };
+  }
+
+  // ---- outcome distributions ---------------------------------------------------------------
+  //
+  // Same recursion as the J-values, but tracking the probability mass of each result instead of
+  // its expectation. Masses are "J-masses" (P(result and no dealer blackjack) when the dealer has
+  // peeked), so dividing by scale() at the root conditions on the peek exactly as the EVs do.
+  // A single hand only ends in lose / push / win, stored as [lose, push, win].
+
+  private readonly distMemo = new Map<number, Float64Array>();
+
+  private standDist(total: number): Float64Array {
+    const d = this.dealer();
+    const out = new Float64Array(3);
+    out[0] = this.enhcBJ ? d[OUT_BJ] : 0;
+    out[2] += d[5];
+    for (let o = 0; o < 5; o++) {
+      const t = 17 + o;
+      if (total < 17 || t > total) out[0] += d[o];
+      else if (t === total) out[1] += d[o];
+      else out[2] += d[o];
+    }
+    return out;
+  }
+
+  /** Distribution when the hand plays on optimally (stand or hit), matching bestHS's decisions. */
+  private bestDist(hard: number, ace: boolean, ctx: number): Float64Array {
+    const total = totalOf(hard, ace);
+    if (total === 21) return this.standDist(21);
+    const mk = this.key * 11 + ctx;
+    const memo = this.distMemo.get(mk);
+    if (memo) return memo;
+    const soft = ace && hard <= 11;
+    const canStand = soft ? total >= 17 : total >= 12;
+    const out = canStand && this.standJ(total) > this.hitJ(hard, ace, ctx) ? this.standDist(total) : this.hitDist(hard, ace, ctx);
+    this.distMemo.set(mk, out);
+    return out;
+  }
+
+  private hitDist(hard: number, ace: boolean, ctx: number): Float64Array {
+    const out = new Float64Array(3);
+    for (let r = 1; r <= 10; r++) {
+      const p = this.p(r);
+      if (p === 0) continue;
+      this.push(r);
+      const nh = hard + r;
+      if (nh > 21) out[0] += p * this.scale();
+      else {
+        const d = this.bestDist(nh, ace || r === 1, ctx);
+        out[0] += p * d[0];
+        out[1] += p * d[1];
+        out[2] += p * d[2];
+      }
+      this.pop(r);
+    }
+    return out;
+  }
+
+  private doubleDist(hard: number, ace: boolean): Float64Array {
+    const out = new Float64Array(3);
+    for (let r = 1; r <= 10; r++) {
+      const p = this.p(r);
+      if (p === 0) continue;
+      this.push(r);
+      const nh = hard + r;
+      if (nh > 21) out[0] += p * this.scale();
+      else {
+        const d = this.standDist(totalOf(nh, ace || r === 1));
+        out[0] += p * d[0];
+        out[1] += p * d[1];
+        out[2] += p * d[2];
+      }
+      this.pop(r);
+    }
+    return out;
+  }
+
+  /** Should a hand stand (S), hit (H) or double (D)? Uses the current shoe state (this.rem). */
+  private decide(hard: number, ace: boolean, ctx: number, canDouble: boolean): 'S' | 'H' | 'D' {
+    const total = totalOf(hard, ace);
+    if (total >= 21) return 'S';
+    const s = this.standJ(total);
+    const h = this.hitJ(hard, ace, ctx);
+    let best: 'S' | 'H' | 'D' = h > s ? 'H' : 'S';
+    if (canDouble && this.doubleJ(hard, ace) > Math.max(s, h)) best = 'D';
+    return best;
+  }
+
+  /**
+   * Distribution of the total result of splitting X,X, by simulation. Every hand follows the
+   * same decisions the exact split EV assumes (see splitDetail), and cards are dealt from a real
+   * shoe, so each hand's draws affect the others. Seeded, so results are repeatable.
+   */
+  private simulateSplit(X: Rank, n: number): Map<number, number> {
+    const rules = this.rules;
+    const rand = mulberry32(0x5eed + X * 101 + this.up);
+    const oneCardAces = X === 1 && !rules.hitSplitAces;
+    const maxHands = X === 1 ? (rules.resplitAces ? rules.maxSplitHands : 2) : rules.maxSplitHands;
+    const bjRank = this.up === 1 ? 10 : this.up === 10 ? 1 : 0;
+    const shoe = new Array<number>(11).fill(0);
+    let shoeN = 0;
+    const draw = (exclude = 0): number => {
+      if (this.infinite) {
+        for (;;) {
+          let u = rand();
+          for (let r = 1; r <= 10; r++) {
+            u -= INFINITE_PROBS[r];
+            if (u < 0) {
+              if (r !== exclude) return r;
+              break;
+            }
+          }
+        }
+      }
+      const total = shoeN - (exclude ? shoe[exclude] : 0);
+      let u = rand() * total;
+      for (let r = 1; r <= 10; r++) {
+        if (r === exclude) continue;
+        u -= shoe[r];
+        if (u < 0) {
+          shoe[r]--;
+          shoeN--;
+          return r;
+        }
+      }
+      for (let r = 10; r >= 1; r--)
+        if (r !== exclude && shoe[r] > 0) {
+          shoe[r]--;
+          shoeN--;
+          return r;
+        }
+      throw new Error('Shoe exhausted');
+    };
+    const decisions = new Map<string, 'S' | 'H' | 'D'>();
+    const decideFor = (cards: number[], canDouble: boolean): 'S' | 'H' | 'D' => {
+      const k = cards.join(',') + (canDouble ? 'd' : '');
+      let a = decisions.get(k);
+      if (!a) {
+        this.resetTo([X, ...(cards.slice(1) as Rank[])]);
+        this.push(X);
+        let hard = 0;
+        let ace = false;
+        for (const c of cards) {
+          hard += c;
+          if (c === 1) ace = true;
+        }
+        a = this.decide(hard, ace, X, canDouble);
+        decisions.set(k, a);
+      }
+      return a;
+    };
+    const result = new Map<number, number>();
+    for (let t = 0; t < n; t++) {
+      shoeN = 0;
+      for (let r = 1; r <= 10; r++) {
+        shoe[r] = this.infinite ? 0 : this.base[r] - (r === X ? 2 : 0);
+        shoeN += shoe[r];
+      }
+      // With a peek the hole card is known not to complete a blackjack.
+      const hole = this.peek ? draw(bjRank) : -1;
+      let pending = 2;
+      let made = 2;
+      const finals: { total: number; bust: boolean; bet: number }[] = [];
+      while (pending > 0) {
+        pending--;
+        const cards: number[] = [X];
+        let c = draw();
+        while (c === X && made < maxHands) {
+          made++;
+          pending++;
+          c = draw();
+        }
+        cards.push(c);
+        let bet = 1;
+        if (!oneCardAces) {
+          const v0 = handValue(cards as Rank[]);
+          const canDbl = rules.doubleAfterSplit && canDoubleTotal(rules, v0.total, v0.soft);
+          let a = decideFor(cards, canDbl);
+          if (a === 'D') {
+            bet = 2;
+            cards.push(draw());
+          } else {
+            while (a === 'H') {
+              cards.push(draw());
+              const v = handValue(cards as Rank[]);
+              if (v.total >= 21) break;
+              a = decideFor(cards, false);
+            }
+          }
+        }
+        const v = handValue(cards as Rank[]);
+        finals.push({ total: v.total, bust: v.total > 21, bet });
+      }
+      // Dealer plays out (hole card drawn now in a no-peek game).
+      const dc = [this.up, hole > 0 ? hole : draw()];
+      const dealerBJ = (dc[0] === 1 && dc[1] === 10) || (dc[0] === 10 && dc[1] === 1);
+      for (;;) {
+        const v = handValue(dc as Rank[]);
+        if (v.total > 17 || (v.total === 17 && !(v.soft && rules.hitSoft17))) break;
+        dc.push(draw());
+      }
+      const dv = handValue(dc as Rank[]).total;
+      let net = 0;
+      for (const h of finals) {
+        if (h.bust || dealerBJ) net -= h.bet;
+        else if (dv > 21 || h.total > dv) net += h.bet;
+        else if (h.total < dv) net -= h.bet;
+      }
+      result.set(net, (result.get(net) ?? 0) + 1);
+    }
+    for (const [k, v] of result) result.set(k, v / n);
+    return result;
+  }
+
+  /** Outcome distribution of every legal play, on the same basis as analyze(). */
+  distributions(cards: readonly Rank[], opts: RootOptions, splitSamples = 60000): PlayDistributions {
+    const root = this.analyze(cards, opts);
+    this.resetTo(cards);
+    const v = handValue(cards);
+    const ace = cards.includes(1);
+    const scale = this.scale();
+    const single = (a: Float64Array, m: number): Map<number, number> =>
+      new Map([
+        [-m, a[0] / scale],
+        [0, a[1] / scale],
+        [m, a[2] / scale],
+      ]);
+    const maps: Partial<Record<Action, Map<number, number>>> = {};
+    maps.S = single(this.standDist(v.total), 1);
+    maps.H = single(this.hitDist(v.hard, ace, 0), 1);
+    if (opts.double) maps.D = single(this.doubleDist(v.hard, ace), 2);
+    const simulated: PlayDistributions['simulated'] = {};
+    if (opts.split && cards.length === 2 && cards[0] === cards[1]) {
+      maps.P = this.simulateSplit(cards[0], splitSamples);
+      simulated.P = splitSamples;
+      this.resetTo(cards);
+    }
+    if (root.ev.R !== undefined) {
+      const pBJ = root.pBJ;
+      maps.R = !this.rules.dealerPeeks && this.rules.surrender === 'late' ? new Map([[-1, pBJ], [-0.5, 1 - pBJ]]) : new Map([[-0.5, 1]]);
+    }
+    if (root.basis === 'unconditional' && this.peek) {
+      // Early surrender against A/T: every other play is seen before the peek, so a dealer
+      // blackjack (probability pBJ) costs the original bet.
+      for (const a of ['S', 'H', 'D', 'P'] as const) {
+        const m = maps[a];
+        if (!m) continue;
+        const out = new Map<number, number>();
+        for (const [x, p] of m) out.set(x, (out.get(x) ?? 0) + (1 - root.pBJ) * p);
+        out.set(-1, (out.get(-1) ?? 0) + root.pBJ);
+        maps[a] = out;
+      }
+    }
+    const dist: PlayDistributions['dist'] = {};
+    for (const a of ACTIONS) if (maps[a]) dist[a] = toOutcomes(maps[a]!);
+    return { dist, simulated };
   }
 
   // ---- public API ---------------------------------------------------------------------------

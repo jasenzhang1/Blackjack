@@ -291,6 +291,19 @@ details.acc > .acc-body { padding: 0 0 12px; }
 .evbar .val-btn { font: inherit; font-weight: 700; color: var(--gold-2); background: none; border: 0; padding: 4px 0; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
 .evbar .val-btn:hover { color: var(--text); }
 .evbar.best .val::after { content: ' ★'; color: var(--gold); }
+/* Outcome distribution bars */
+.obars { display: flex; flex-direction: column; gap: 6px; }
+.obar-row { display: grid; grid-template-columns: 96px minmax(0, 1fr) 64px; align-items: center; gap: 8px; font: inherit; font-size: 0.86rem; color: inherit; background: none; border: 0; padding: 2px 0; text-align: left; cursor: pointer; }
+.obar-row.obar-head { cursor: default; padding: 0; }
+.obar-row .lbl { display: flex; align-items: center; gap: 6px; color: var(--text-2); font-weight: 600; }
+.obar-row.best .lbl { color: var(--text); }
+.obar-row .val { text-align: right; font-weight: 700; color: var(--gold-2); text-decoration: underline dotted; text-underline-offset: 3px; }
+.obar-row.obar-head .num { text-align: right; }
+.obar { display: flex; height: 18px; border-radius: 5px; overflow: hidden; background: var(--bg-2); }
+.obar > span { display: block; height: 100%; min-width: 0; }
+.olegend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 10px; color: var(--text-2); }
+.olegend .item { display: inline-flex; align-items: center; gap: 5px; }
+.sw { display: inline-block; width: 11px; height: 11px; border-radius: 3px; vertical-align: -1px; }
 
 /* ---------- playing cards ---------- */
 .pcard {

@@ -19,6 +19,8 @@ export interface Prefs {
   reduceMotion: boolean;
   /** Hide the strategy-chart rows that repeat another row (hard 4 = 2,2 and soft 12 = A,A). */
   hideRedundantRows: boolean;
+  /** Strategy popup: expected value bars, or the full distribution of outcomes. */
+  playView: 'ev' | 'dist';
 }
 
 export const DEFAULT_PREFS: Prefs = {
@@ -29,6 +31,7 @@ export const DEFAULT_PREFS: Prefs = {
   showKeys: true,
   reduceMotion: false,
   hideRedundantRows: false,
+  playView: 'ev',
 };
 
 interface SettingsValue {

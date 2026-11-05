@@ -6,14 +6,15 @@
 import { useState } from 'react';
 import { rankLabel, rankText, type Rank } from '../engine/cards';
 import { OUTCOME_LABELS, type DealerTreeNode } from '../engine/dealer';
-import { ACTION_NAMES, type Action, type Explanation, type RootOptions } from '../engine/ev';
+import { ACTION_NAMES, outcomeStats, type Action, type Explanation, type Outcomes, type PlayDistributions, type RootOptions } from '../engine/ev';
 import { cardsLabel, describeHand, handValue, parseRow, rowLabel } from '../engine/hand';
 import { canDoubleTotal, rulesKey, type Rules } from '../engine/rules';
 import type { Cell, StrategyTable } from '../engine/strategy';
+import { useSettings } from '../state/settings';
 import { useEngine } from '../worker/client';
 import { RankCards } from './PlayingCard';
 import { TeX } from './TeX';
-import { CloseButton, EVBars, Modal, Tag, fmtEV, fmtPct } from './ui';
+import { CloseButton, EVBars, Modal, Seg, Tag, fmtEV, fmtPct } from './ui';
 
 /** A probability or EV as a percent inside a TeX formula. */
 const tp = (x: number) => `${x < 0 ? '-' : ''}${Math.abs(x * 100).toFixed(2)}\\%`;
@@ -29,8 +30,21 @@ function optsFor(rules: Rules, cards: Rank[], allowSplit: boolean): RootOptions 
   };
 }
 
+/** Outcome distributions for every play of a chart cell (mixture over its compositions). */
+function useCellDist(rules: Rules, cell: Cell) {
+  const { kind } = parseRow(cell.row);
+  const key = `dist|${rulesKey(rules)}|${cell.row}|${cell.up}`;
+  return useEngine<'dist'>(key, () => ({
+    type: 'dist',
+    rules,
+    up: cell.up,
+    comps: cell.comps.map((c) => ({ cards: [...c.cards], weight: c.weight, opts: optsFor(rules, c.cards, kind === 'pair') })),
+  }));
+}
+
 export function ProofDrawer({ table, cell, onClose }: { table: StrategyTable; cell: Cell; onClose: () => void }) {
   const [play, setPlay] = useState<Action | null>(null);
+  const { prefs, setPrefs } = useSettings();
   const best = cell.best;
   const second = cell.second;
   const margin = cell.margin;
@@ -57,15 +71,151 @@ export function ProofDrawer({ table, cell, onClose }: { table: StrategyTable; ce
       </div>
 
       <section>
-        <h4>Expected value of each play</h4>
-        <EVBars ev={cell.ev} highlight={best} onPick={setPlay} />
-        <p className="muted small" style={{ marginTop: 6 }}>
-          Tap a value to see the math.
-        </p>
+        <div className="row between" style={{ marginBottom: 8 }}>
+          <h4 style={{ margin: 0 }}>Each play</h4>
+          <Seg
+            label="Show"
+            value={prefs.playView}
+            onChange={(v) => setPrefs({ playView: v })}
+            options={[
+              { value: 'ev', label: 'Expected value' },
+              { value: 'dist', label: 'Outcomes' },
+            ]}
+          />
+        </div>
+        {prefs.playView === 'ev' ? (
+          <>
+            <EVBars ev={cell.ev} highlight={best} onPick={setPlay} />
+            <p className="muted small" style={{ marginTop: 6 }}>
+              Tap a value to see the math.
+            </p>
+          </>
+        ) : (
+          <CellOutcomes rules={table.rules} cell={cell} onPick={setPlay} />
+        )}
       </section>
 
       {play && <PlayProofModal rules={table.rules} cell={cell} play={play} onBack={() => setPlay(null)} onClose={onClose} />}
     </aside>
+  );
+}
+
+// --------------------------------------------------------------------------------------------
+// Outcome distributions
+// --------------------------------------------------------------------------------------------
+
+const LOSS_COLORS = ['#f0a5a5', '#dd5c5c', '#b23434', '#7a1f1f'];
+const WIN_COLORS = ['#a3dcb4', '#3daf6b', '#1d7a45', '#0e4a29'];
+
+/** Color for a net result in bets: reds for losses, greens for wins, darker for bigger. */
+export function outcomeColor(x: number): string {
+  if (Math.abs(x) < 1e-9) return '#7d8c85';
+  const m = Math.abs(x);
+  const i = m <= 0.5 ? 0 : m <= 1 ? 1 : m <= 2 ? 2 : 3;
+  return x < 0 ? LOSS_COLORS[i] : WIN_COLORS[i];
+}
+
+/** A net result in bets, e.g. "−2", "−½", "Push", "+1". */
+export function outcomeLabel(x: number): string {
+  if (Math.abs(x) < 1e-9) return 'Push';
+  const m = Math.abs(x);
+  const body = m === 0.5 ? '½' : Number.isInteger(m) ? String(m) : m.toFixed(1);
+  return `${x < 0 ? '−' : '+'}${body}`;
+}
+
+function OutcomeBar({ o }: { o: Outcomes }) {
+  return (
+    <span className="obar">
+      {o.map(({ x, p }) => (
+        <span key={x} style={{ width: `${p * 100}%`, background: outcomeColor(x) }} title={`${outcomeLabel(x)}: ${(p * 100).toFixed(2)}%`} />
+      ))}
+    </span>
+  );
+}
+
+/** Stacked outcome bars for every play of a cell, with the standard deviation of each. */
+function CellOutcomes({ rules, cell, onPick }: { rules: Rules; cell: Cell; onPick: (a: Action) => void }) {
+  const { data, error } = useCellDist(rules, cell);
+  if (error) return <div className="callout bad">Engine error: {error}</div>;
+  if (!data) return <div className="muted small">Computing the distribution of every play…</div>;
+  const acts = (['S', 'H', 'D', 'P', 'R'] as Action[]).filter((a) => data.dist[a]);
+  const xs = Array.from(new Set(acts.flatMap((a) => data.dist[a]!.filter((z) => z.p >= 0.0005).map((z) => z.x)))).sort((a, b) => a - b);
+  return (
+    <>
+      <div className="obars">
+        <div className="obar-row obar-head muted small">
+          <span />
+          <span />
+          <span className="num">Std dev</span>
+        </div>
+        {acts.map((a) => {
+          const { sd } = outcomeStats(data.dist[a]!);
+          return (
+            <button key={a} className={`obar-row ${a === cell.best ? 'best' : ''}`} onClick={() => onPick(a)} title={`Show the math for ${ACTION_NAMES[a].toLowerCase()}`}>
+              <span className="lbl">
+                <span className={`tag ${a}`}>{a}</span>
+                {ACTION_NAMES[a]}
+              </span>
+              <OutcomeBar o={data.dist[a]!} />
+              <span className="num val">{sd.toFixed(2)}</span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="olegend small">
+        {xs.map((x) => (
+          <span key={x} className="item">
+            <span className="sw" style={{ background: outcomeColor(x) }} />
+            {outcomeLabel(x)}
+          </span>
+        ))}
+      </div>
+      <p className="muted small" style={{ marginTop: 6 }}>
+        Net result in bets. A bigger std dev means bigger swings. Tap a play for its numbers.{data.simulated.P ? ' Split is simulated.' : ''}
+      </p>
+    </>
+  );
+}
+
+/** Table of one play's outcome distribution, with mean and standard deviation. */
+function OutcomeTable({ o, simulated }: { o: Outcomes; simulated?: number }) {
+  const { mean, sd } = outcomeStats(o);
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <h4>Distribution of outcomes</h4>
+      <OutcomeBar o={o} />
+      <table className="data" style={{ marginTop: 8 }}>
+        <thead>
+          <tr>
+            <th>Net result (bets)</th>
+            <th className="num">Probability</th>
+          </tr>
+        </thead>
+        <tbody>
+          {o.map(({ x, p }) => (
+            <tr key={x}>
+              <td>
+                <span className="sw" style={{ background: outcomeColor(x) }} /> {outcomeLabel(x)}
+              </td>
+              <td className="num">{p < 0.0001 ? '<0.01%' : `${(p * 100).toFixed(2)}%`}</td>
+            </tr>
+          ))}
+          <tr className="total">
+            <td>Expected value</td>
+            <td className="num">{fmtEV(mean)}</td>
+          </tr>
+          <tr className="total">
+            <td>Standard deviation</td>
+            <td className="num">{sd.toFixed(3)} bets</td>
+          </tr>
+        </tbody>
+      </table>
+      {simulated && (
+        <p className="muted small">
+          Simulated from {simulated.toLocaleString()} rounds that follow the same strategy, so it can differ from the exact EV in the last decimal places.
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -77,9 +227,12 @@ function PlayProofModal({ rules, cell, play, onBack, onClose }: { rules: Rules; 
   const comps = cell.comps;
   const comp = comps[Math.min(compIdx, comps.length - 1)];
   const drill = stack[stack.length - 1];
+  const { data: dist } = useCellDist(rules, cell);
+  const o: Outcomes | undefined = (dist as PlayDistributions | null)?.dist[play];
   return (
     <Modal title={`${ACTION_NAMES[play]}: ${rowLabel(cell.row)} vs dealer ${rankLabel(cell.up)} (${fmtEV(cell.ev[play])})`} onBack={onBack} onClose={onClose}>
       <div className="proof">
+        {o ? <OutcomeTable o={o} simulated={dist!.simulated[play]} /> : <p className="muted small">Computing the distribution of outcomes…</p>}
         {comps.length > 1 && (
           <div style={{ marginBottom: 12 }}>
             <p className="small text-2" style={{ marginBottom: 6 }}>

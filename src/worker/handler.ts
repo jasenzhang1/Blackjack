@@ -6,7 +6,7 @@
 import { fullShoe, removeRanks, type Rank } from '../engine/cards';
 import { representativeShoe } from '../engine/counting';
 import { dealerTreeNode } from '../engine/dealer';
-import { EVEngine } from '../engine/ev';
+import { ACTIONS, EVEngine, type Outcomes, type PlayDistributions } from '../engine/ev';
 import { DEFAULT_RULES, rulesKey, strategyKey, type Rules } from '../engine/rules';
 import { computeStrategy, type StrategyTable } from '../engine/strategy';
 import type { CurvePoint, EdgePoint, EORPoint, EngineRequest, RuleEffect } from './protocol';
@@ -182,6 +182,28 @@ export function handle(req: EngineRequest, onProgress: Progress): unknown {
         onProgress(i + 1, req.tcs.length);
       });
       return out;
+    }
+
+    case 'dist': {
+      // A chart cell's distribution is the mixture of its compositions' distributions.
+      const eng = engineFor(req.rules, req.up);
+      const acc: Partial<Record<string, Map<number, number>>> = {};
+      const simulated: PlayDistributions['simulated'] = {};
+      req.comps.forEach((c, i) => {
+        const d = eng.distributions(c.cards, c.opts, 200000);
+        for (const [a, o] of Object.entries(d.dist)) {
+          const m = (acc[a] ??= new Map());
+          for (const { x, p } of o!) m.set(x, (m.get(x) ?? 0) + c.weight * p);
+        }
+        Object.assign(simulated, d.simulated);
+        onProgress(i + 1, req.comps.length);
+      });
+      const dist: PlayDistributions['dist'] = {};
+      for (const a of ACTIONS) {
+        const m = acc[a];
+        if (m) dist[a] = Array.from(m, ([x, p]) => ({ x, p })).sort((u, v) => u.x - v.x) as Outcomes;
+      }
+      return { dist, simulated } satisfies PlayDistributions;
     }
 
     case 'eor': {

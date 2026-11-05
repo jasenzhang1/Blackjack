@@ -1,6 +1,6 @@
 import type { Counts, Rank } from '../engine/cards';
 import type { DealerTreeNode } from '../engine/dealer';
-import type { ActionEVs, Explanation, RootEV, RootOptions } from '../engine/ev';
+import type { ActionEVs, Explanation, PlayDistributions, RootEV, RootOptions } from '../engine/ev';
 import type { Rules } from '../engine/rules';
 import type { StrategyTable } from '../engine/strategy';
 
@@ -42,7 +42,8 @@ export type EngineRequest =
   | { type: 'ruleEffects'; rules: Rules }
   | { type: 'edgeVsCount'; rules: Rules; tcs: number[]; decksLeft: number }
   | { type: 'deviationCurve'; rules: Rules; cards: Rank[]; up: Rank; opts: RootOptions; tcs: number[]; decksLeft: number }
-  | { type: 'eor'; rules: Rules };
+  | { type: 'eor'; rules: Rules }
+  | { type: 'dist'; rules: Rules; up: Rank; comps: { cards: Rank[]; weight: number; opts: RootOptions }[] };
 
 export interface EngineResults {
   strategy: StrategyTable;
@@ -53,6 +54,7 @@ export interface EngineResults {
   edgeVsCount: EdgePoint[];
   deviationCurve: CurvePoint[];
   eor: EORPoint[];
+  dist: PlayDistributions;
 }
 
 export type WorkerIn = { id: number; req: EngineRequest };
