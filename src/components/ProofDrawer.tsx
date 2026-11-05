@@ -8,7 +8,7 @@ import { rankLabel, rankText, type Rank } from '../engine/cards';
 import { OUTCOME_LABELS, type DealerTreeNode } from '../engine/dealer';
 import { ACTION_NAMES, type Action, type Explanation, type RootOptions } from '../engine/ev';
 import { cardsLabel, describeHand, handValue, parseRow, rowLabel } from '../engine/hand';
-import { canDoubleTotal, describeRules, rulesKey, type Rules } from '../engine/rules';
+import { canDoubleTotal, rulesKey, type Rules } from '../engine/rules';
 import { bestOf, type Cell, type StrategyTable } from '../engine/strategy';
 import { useSettings } from '../state/settings';
 import { useEngine } from '../worker/client';
@@ -51,14 +51,6 @@ export function ProofDrawer({ table, cell, onClose }: { table: StrategyTable; ce
           ✕
         </button>
       </div>
-      <div className="row tight" style={{ marginBottom: 10 }}>
-        {describeRules(rules).slice(0, 6).map((c) => (
-          <span className="chip" key={c}>
-            {c}
-          </span>
-        ))}
-      </div>
-
       <div className="verdict">
         <div className="row between">
           <span className="big">
