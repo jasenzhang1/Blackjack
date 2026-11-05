@@ -1,4 +1,5 @@
 import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { ACTION_NAMES, type Action, type ActionEVs } from '../engine/ev';
 import { bestOf } from '../engine/strategy';
 
@@ -21,7 +22,8 @@ export function Modal({ title, onClose, onBack, children, footer, narrow }: { ti
     ref.current?.focus();
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
-  return (
+  // Portal to <body>: the top bar's backdrop-filter would otherwise trap position: fixed inside it.
+  return createPortal(
     <div className="modal-back" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className={`modal ${narrow ? 'narrow' : ''}`} role="dialog" aria-modal="true" tabIndex={-1} ref={ref}>
         <div className="modal-head">
@@ -36,7 +38,8 @@ export function Modal({ title, onClose, onBack, children, footer, narrow }: { ti
         <div className="modal-body">{children}</div>
         {footer && <div className="modal-foot">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
