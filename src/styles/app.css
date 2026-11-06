@@ -169,8 +169,10 @@ small, .small { font-size: 0.85rem; }
 @media (min-width: 1100px) {
   /* Fit the whole trainer on one screen: no page scroll; the play log scrolls inside its panel. */
   .app:has(.trainer-page) .footer { display: none; }
-  .trainer-page { height: calc(100dvh - 57px); display: flex; flex-direction: column; padding-bottom: 16px; overflow: hidden; }
-  .trainer-grid { grid-template-columns: 270px minmax(0, 1fr) 270px; flex: 1; min-height: 0; }
+  /* flex: none so the app's column layout can't size the page to its content. */
+  .trainer-page { flex: none; height: calc(100dvh - 57px); display: flex; flex-direction: column; padding-bottom: 16px; overflow: hidden; }
+  /* minmax(0, 1fr) row: the row fills the screen and never grows with the play log (which scrolls). */
+  .trainer-grid { grid-template-columns: 270px minmax(0, 1fr) 270px; grid-template-rows: minmax(0, 1fr); flex: 1; min-height: 0; }
   .trainer-side { overflow: hidden; }
   .play-log { max-height: none; }
   .trainer-fb { order: 0; }
