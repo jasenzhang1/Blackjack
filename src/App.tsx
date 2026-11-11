@@ -136,9 +136,6 @@ function TopNav() {
               </div>
             </div>
           ))}
-          <Link to="/rules" className="nav-link">
-            Rules Lab
-          </Link>
           <Link to="/math" className="nav-link">
             The Math
           </Link>
