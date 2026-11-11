@@ -2,11 +2,12 @@
  * Merging a device's saved progress with the copy stored in the user's account, so signing in on a
  * new device (or after playing as a guest) never loses either side's stats.
  */
+import { mergeHoldem, type HoldemStats } from '../holdem/progress';
 import type { SessionReport } from '../table/report';
 import type { CellStat, DrillResult, QuizAttempt, TrainerStats, WatchStats } from './progress';
 
 /** Keys synced to the account. Sessions are stored separately (one cloud document each). */
-export const SYNC_KEYS = ['rules', 'prefs', 'cells', 'quiz', 'trainer', 'drills', 'watch', 'sessions'] as const;
+export const SYNC_KEYS = ['rules', 'prefs', 'cells', 'quiz', 'trainer', 'drills', 'watch', 'holdem', 'sessions'] as const;
 export type SyncKey = (typeof SYNC_KEYS)[number];
 export type Blob = Partial<Record<SyncKey, unknown>>;
 
@@ -58,6 +59,7 @@ export function mergeData(local: Blob, cloud: Blob): Blob {
   const wl = local.watch as WatchStats | undefined;
   const wc = cloud.watch as WatchStats | undefined;
   if (wl || wc) out.watch = !wc || (wl && wl.checks > wc.checks) ? wl : wc;
+  if (local.holdem || cloud.holdem) out.holdem = mergeHoldem(local.holdem as HoldemStats, cloud.holdem as HoldemStats);
   out.sessions = unionBy(local.sessions as SessionReport[], cloud.sessions as SessionReport[], (s) => s.id, (x, y) => (y.end > x.end ? y : x))
     .sort((x, y) => x.end - y.end)
     .slice(-60);

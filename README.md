@@ -22,6 +22,7 @@ Worker, with no server and no precomputed tables.
 | **Casino** (P-1) | A practice bankroll and table limits. The live coach can be off, on request, warn-on-mistakes (intercepts a costly play), or always on (shows the recommended play and exact EVs for the actual shoe). Report card with grade, EV lost to mistakes, and luck vs. skill. |
 | **Rules lab** | Exact house edge for any rules, the exact value of every individual rule (each variant re-solved), cost per hour, and a strategy diff between any two rule sets. |
 | **The math** | All the proofs, in the app and in [`docs/MATH.md`](docs/MATH.md). |
+| **Hold'em training rooms** | A Texas Hold'em section (`#/holdem`) with four rooms. **Pot odds**: count outs, price the call, call or fold. **Implied odds**: break-even future winnings, stack depth, draw disguise, reverse implied odds. **Semi-bluffs**: break-even fold equity, check vs. half-pot vs. pot. **Reading opponents**: player types from HUD stats, combo counting with blockers, betting-range breakdowns with a 13×13 range grid, and exploit questions. Opponents are five modelled archetypes (nit, TAG, LAG, calling station, maniac). Every spot is graded against exact equity, enumerated over every runout and every hand in the opponent's range. |
 
 **Rule variations:** 1, 2, 4, 5, 6, 8 or infinite decks · S17/H17 · blackjack pays 3:2, 7:5, 6:5 or
 1:1 · no, late or early surrender · double on any two, 9–11 or 10–11 · DAS on/off · split to 2/3/4
@@ -95,10 +96,12 @@ src/
     counting.ts   counting systems, true count, representative shoes
     deviations.ts Illustrious 18 / Fab 4 and grading
     game.ts       step-driven table simulator; bots.ts = simulated players
+  holdem/       Texas Hold'em: 7-card evaluator, exact range equity, ranges/combos,
+                opponent profiles, scenario generators, room UI
   worker/       Web Worker hosting the engine + promise client and React hooks
   table/        table controller hook, table UI, session table, report card
   components/   chart grid, proof drawer, charts (SVG), KaTeX, cards, UI kit
-  pages/        one file per route
+  pages/        one file per route (pages/holdem/ for the Hold'em rooms)
   state/        rules/preferences context, progress persistence (localStorage)
 tests/          Vitest suites
 docs/           DESIGN.md (plan), MATH.md (proofs)

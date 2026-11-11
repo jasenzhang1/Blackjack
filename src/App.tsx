@@ -17,6 +17,11 @@ const Casino = lazy(() => import('./pages/Casino'));
 const Reports = lazy(() => import('./pages/Reports'));
 const RulesLab = lazy(() => import('./pages/RulesLab'));
 const MathPage = lazy(() => import('./pages/MathPage'));
+const HoldemLobby = lazy(() => import('./pages/holdem/Lobby'));
+const PotOdds = lazy(() => import('./pages/holdem/PotOdds'));
+const ImpliedOdds = lazy(() => import('./pages/holdem/ImpliedOdds'));
+const SemiBluff = lazy(() => import('./pages/holdem/SemiBluff'));
+const Reading = lazy(() => import('./pages/holdem/Reading'));
 
 const ROUTES: Record<string, React.ComponentType> = {
   '/': Home,
@@ -31,6 +36,11 @@ const ROUTES: Record<string, React.ComponentType> = {
   '/reports': Reports,
   '/rules': RulesLab,
   '/math': MathPage,
+  '/holdem': HoldemLobby,
+  '/holdem/pot-odds': PotOdds,
+  '/holdem/implied-odds': ImpliedOdds,
+  '/holdem/semi-bluff': SemiBluff,
+  '/holdem/reading': Reading,
 };
 
 const GROUPS: { label: string; prefix: string; items: { to: string; label: string }[] }[] = [
@@ -59,6 +69,17 @@ const GROUPS: { label: string; prefix: string; items: { to: string; label: strin
     items: [
       { to: '/play', label: 'Casino' },
       { to: '/reports', label: 'Report cards' },
+    ],
+  },
+  {
+    label: "Hold'em",
+    prefix: '/holdem',
+    items: [
+      { to: '/holdem', label: 'Training rooms' },
+      { to: '/holdem/pot-odds', label: 'Pot odds' },
+      { to: '/holdem/implied-odds', label: 'Implied odds' },
+      { to: '/holdem/semi-bluff', label: 'Semi-bluffs' },
+      { to: '/holdem/reading', label: 'Reading opponents' },
     ],
   },
 ];
