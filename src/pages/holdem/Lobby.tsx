@@ -69,7 +69,7 @@ export default function HoldemLobby() {
           return (
             <Link key={r.id} to={r.to} className="room-card">
               <div className="row between">
-                <span className="step">{i + 1}</span>
+                <span className="step"><span>{i + 1}</span></span>
                 <span className="chip">{r.tag}</span>
               </div>
               <h2>{r.title}</h2>

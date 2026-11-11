@@ -114,7 +114,7 @@ function Track({ game }: { game: Game }) {
       {game.groups.map((g, gi) => (
         <div key={g.label} className="track-card">
           <div className="row">
-            <span className="step">{gi + 1}</span>
+            <span className="step"><span>{gi + 1}</span></span>
             <h3 style={{ margin: 0 }}>{g.label}</h3>
           </div>
           <ul>
