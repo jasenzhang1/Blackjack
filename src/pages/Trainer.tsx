@@ -8,6 +8,7 @@ import { mulberry32, randomSeed, weightedIndex } from '../engine/rng';
 import { cellKey, type StrategyTable } from '../engine/strategy';
 import { cellStats, getTrainerStats, saveTrainerStats } from '../state/progress';
 import { useSettings } from '../state/settings';
+import { load, save } from '../state/storage';
 import { ActionButtons, FeedbackBanner, InsurancePrompt, EarlyPrompt, TableView, WhyModal } from '../table/components';
 import { useTableGame, type GameSetup } from '../table/useTableGame';
 import { useStrategy } from '../worker/client';
@@ -25,6 +26,15 @@ const FILTERS: { value: Filter; label: string }[] = [
   { value: 'close', label: 'Close calls' },
   { value: 'weak', label: 'My weak spots' },
 ];
+
+/** One-click hand-type toggle shown above the table. Clicking the active one goes back to all hands. */
+const QUICK: { value: Filter; label: string }[] = [
+  { value: 'hard', label: 'Hard' },
+  { value: 'soft', label: 'Soft' },
+  { value: 'pair', label: 'Pairs' },
+];
+const FILTER_KEY = 'trainer.filter';
+const isFilter = (v: unknown): v is Filter => FILTERS.some((f) => f.value === v);
 
 interface Candidate {
   row: string;
@@ -109,7 +119,14 @@ function makeRig(table: StrategyTable, filter: Filter, seed: number): (() => Ran
 export default function Trainer() {
   const { rules, prefs } = useSettings();
   const { table, progress } = useStrategy(rules);
-  const [filter, setFilter] = useState<Filter>('all');
+  const [filter, setFilterState] = useState<Filter>(() => {
+    const v = load<unknown>(FILTER_KEY, 'all');
+    return isFilter(v) ? v : 'all';
+  });
+  const setFilter = (f: Filter) => {
+    setFilterState(f);
+    save(FILTER_KEY, f);
+  };
   const [decisionOnly, setDecisionOnly] = useState(false);
   const [autoNext, setAutoNext] = useState(true);
   const [why, setWhy] = useState(false);
@@ -216,9 +233,27 @@ export default function Trainer() {
     <main className="page trainer-page">
       <div className="trainer-head">
         <h1>Table trainer</h1>
-        <button className="btn small ghost" onClick={() => setOptsOpen(true)} title="Practice settings">
-          ⚙ {filterLabel}
-        </button>
+        <div className="trainer-quick">
+          <div className="seg" role="group" aria-label="Deal only these hands">
+            <button aria-pressed={filter === 'all'} className={filter === 'all' ? 'on' : ''} onClick={() => setFilter('all')} title="Deal every kind of hand">
+              All
+            </button>
+            {QUICK.map((q) => (
+              <button
+                key={q.value}
+                aria-pressed={filter === q.value}
+                className={filter === q.value ? 'on' : ''}
+                onClick={() => setFilter(filter === q.value ? 'all' : q.value)}
+                title={filter === q.value ? 'Click again to deal all hands' : `Deal only ${q.label.toLowerCase()} hands`}
+              >
+                {q.label}
+              </button>
+            ))}
+          </div>
+          <button className="btn small ghost" onClick={() => setOptsOpen(true)} title="Practice settings">
+            ⚙ {QUICK.some((q) => q.value === filter) || filter === 'all' ? 'More' : filterLabel}
+          </button>
+        </div>
       </div>
 
       <div className="trainer-grid">

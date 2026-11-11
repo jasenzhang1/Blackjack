@@ -139,6 +139,9 @@ small, .small { font-size: 0.85rem; }
 /* ---------- table trainer: table in the middle, last play left, play log right ---------- */
 .trainer-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
 .trainer-head h1 { margin: 0; font-size: 1.5rem; }
+.trainer-head { flex-wrap: wrap; }
+.trainer-quick { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.trainer-quick .seg button { padding: 7px 14px; }
 .trainer-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
 .trainer-center { min-width: 0; }
 .trainer-center .felt { min-height: 0; }
