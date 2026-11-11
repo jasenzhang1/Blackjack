@@ -97,6 +97,7 @@ export default function StrategyChart() {
   const [tab, setTab] = useState<'hard' | 'soft' | 'pair'>('hard');
   const [statsVersion, setStatsVersion] = useState(0);
   const render = useCellRenderer(table, prefs.chartView, statsVersion);
+  const stats = useMemo(() => (table ? cellStats(strategyKey(table.rules)) : {}), [table, statsVersion]);
   const sections = chartSections(!prefs.showRepeatedRows);
   // Two-step confirmation: step 1 asks, step 2 asks again before anything is deleted.
   const [resetting, setResetting] = useState<{ sec: ChartSection; step: 1 | 2 } | null>(null);
@@ -189,7 +190,7 @@ export default function StrategyChart() {
               ))}
             </div>
           </div>
-          {cell && <ProofDrawer key={sel!} table={table} cell={cell} onClose={() => setSel(null)} />}
+          {cell && <ProofDrawer key={sel!} table={table} cell={cell} onClose={() => setSel(null)} stat={prefs.chartView === 'weak' ? stats[sel!] : undefined} />}
         </div>
       )}
       {resetting && (

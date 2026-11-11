@@ -6,22 +6,46 @@
 import { load, save } from './storage';
 import type { SessionReport } from '../table/report';
 
+/** Where in a hand a decision came up (the right play for a cell can differ between them). */
+export type Situation = 'two' | 'multi' | 'split' | 'chart';
+
+export interface Miss {
+  situation: Situation;
+  /** What was played (an action, or a chart code in the quiz). */
+  taken: string;
+  /** What was right in that situation. */
+  correct: string;
+  n: number;
+  /** The most recent hand it happened with. */
+  cards?: number[];
+  last: number;
+}
+
 export interface CellStat {
   attempts: number;
   correct: number;
   last: number;
+  /** Wrong plays, keyed by situation, play taken and right play. */
+  misses?: Record<string, Miss>;
 }
 
 type CellStore = Record<string, Record<string, CellStat>>;
 
 /** `rkey` should be strategyKey(rules) (playing decisions do not depend on the payout). */
-export function recordCell(rkey: string, cell: string, correct: boolean): void {
+export function recordCell(rkey: string, cell: string, correct: boolean, miss?: Omit<Miss, 'n' | 'last'>): void {
   const all = load<CellStore>('cells', {});
   const m = (all[rkey] ??= {});
   const s = (m[cell] ??= { attempts: 0, correct: 0, last: 0 });
   s.attempts++;
   if (correct) s.correct++;
   s.last = Date.now();
+  if (!correct && miss) {
+    const k = `${miss.situation}|${miss.taken}|${miss.correct}`;
+    const x = ((s.misses ??= {})[k] ??= { ...miss, n: 0, last: 0 });
+    x.n++;
+    x.cards = miss.cards;
+    x.last = s.last;
+  }
   save('cells', all);
 }
 

@@ -282,7 +282,12 @@ export function useTableGame(setup: GameSetup, rules: Rules, strategy: StrategyT
       };
       decisions.current.push(rec);
       decisionCountThisRound.current++;
-      if (kind === 'play' && g.cell && !g.deviation) recordCell(strategyKey(rulesRef.current), g.cell, g.ok);
+      if (kind === 'play' && g.cell && !g.deviation) {
+        const p = t.pending();
+        const fromSplit = p.kind === 'action' && t.seats[p.seat].hands[p.hand].fromSplit;
+        const situation = fromSplit ? 'split' : cards.length > 2 ? 'multi' : 'two';
+        recordCell(strategyKey(rulesRef.current), g.cell, g.ok, { situation, taken: g.taken, correct: g.correct, cards });
+      }
       setFeedback({ ...g, id, kind, cards, up, tc, bet });
     },
     [t],

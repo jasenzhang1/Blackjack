@@ -94,7 +94,7 @@ export default function GridQuiz() {
     const ms = startAt ? Date.now() - startAt : 0;
     setElapsed(ms);
     const skey = strategyKey(rules);
-    for (const k of keys) if (answers[k]) recordCell(skey, k, answers[k] === expected(k));
+    for (const k of keys) if (answers[k]) recordCell(skey, k, answers[k] === expected(k), { situation: 'chart', taken: answers[k], correct: expected(k) });
     saveQuizAttempt({ date: Date.now(), scope, strict, correct, total: keys.length, ms, rulesKey: rulesKey(rules) });
   };
 

@@ -10,6 +10,7 @@ import { ACTION_NAMES, outcomeStats, type Action, type Explanation, type Outcome
 import { cardsLabel, describeHand, handValue, parseRow, rowLabel } from '../engine/hand';
 import { canDoubleTotal, rulesKey, type Rules } from '../engine/rules';
 import type { Cell, StrategyTable } from '../engine/strategy';
+import type { CellStat, Miss, Situation } from '../state/progress';
 import { useSettings } from '../state/settings';
 import { useEngine } from '../worker/client';
 import { RankCards } from './PlayingCard';
@@ -42,7 +43,47 @@ function useCellDist(rules: Rules, cell: Cell) {
   }));
 }
 
-export function ProofDrawer({ table, cell, onClose }: { table: StrategyTable; cell: Cell; onClose: () => void }) {
+const SITUATION: Record<Situation, string> = { two: 'First two cards', multi: '3+ cards', split: 'After a split', chart: 'Chart quiz' };
+
+/** What the player did instead of the right play, grouped by where in the hand it happened. */
+function Mistakes({ misses }: { misses: Record<string, Miss> }) {
+  const list = Object.values(misses).sort((a, b) => b.n - a.n);
+  if (!list.length) return null;
+  return (
+    <section>
+      <h4>Your mistakes</h4>
+      <table className="data">
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>You</th>
+            <th>Right</th>
+            <th className="num">Times</th>
+          </tr>
+        </thead>
+        <tbody>
+          {list.map((m) => (
+            <tr key={`${m.situation}|${m.taken}|${m.correct}`}>
+              <td>
+                {SITUATION[m.situation]}
+                {m.cards && <span className="muted small"> · {cardsLabel(m.cards as Rank[])}</span>}
+              </td>
+              <td>
+                <Tag a={m.taken} />
+              </td>
+              <td>
+                <Tag a={m.correct} />
+              </td>
+              <td className="num">{m.n}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  );
+}
+
+export function ProofDrawer({ table, cell, onClose, stat }: { table: StrategyTable; cell: Cell; onClose: () => void; stat?: CellStat }) {
   const [play, setPlay] = useState<Action | null>(null);
   const { prefs, setPrefs } = useSettings();
   const best = cell.best;
@@ -69,6 +110,8 @@ export function ProofDrawer({ table, cell, onClose }: { table: StrategyTable; ce
           </div>
         )}
       </div>
+
+      {stat?.misses && <Mistakes misses={stat.misses} />}
 
       <section>
         <div className="row between" style={{ marginBottom: 8 }}>
