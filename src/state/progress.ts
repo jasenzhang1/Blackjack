@@ -27,6 +27,8 @@ export interface CellStat {
   last: number;
   /** Wrong plays, keyed by situation, play taken and right play. */
   misses?: Record<string, Miss>;
+  /** Time spent on correct answers: count and total milliseconds, per situation. */
+  speed?: Partial<Record<Situation, { n: number; ms: number }>>;
 }
 
 type CellStore = Record<string, Record<string, CellStat>>;
@@ -46,6 +48,17 @@ export function recordCell(rkey: string, cell: string, correct: boolean, miss?: 
     x.cards = miss.cards;
     x.last = s.last;
   }
+  save('cells', all);
+}
+
+/** Adds the time a correct answer took (the attempt itself is counted by recordCell). */
+export function recordCellTime(rkey: string, cell: string, situation: Situation, ms: number): void {
+  const all = load<CellStore>('cells', {});
+  const s = all[rkey]?.[cell];
+  if (!s) return;
+  const x = ((s.speed ??= {})[situation] ??= { n: 0, ms: 0 });
+  x.n++;
+  x.ms += Math.round(ms);
   save('cells', all);
 }
 

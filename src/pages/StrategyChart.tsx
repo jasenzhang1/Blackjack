@@ -7,7 +7,7 @@ import { type Rank } from '../engine/cards';
 import { ALL_HARD_ROWS, ALL_SOFT_ROWS, HARD_ROWS, PAIR_ROWS, SOFT_ROWS, rowKey, type RowKey } from '../engine/hand';
 import { strategyKey } from '../engine/rules';
 import { cellKey, type StrategyTable } from '../engine/strategy';
-import { cellStats, resetCellStats } from '../state/progress';
+import { cellStats, resetCellStats, type CellStat } from '../state/progress';
 import { useSettings, type Prefs } from '../state/settings';
 import { useStrategy } from '../worker/client';
 
@@ -18,6 +18,20 @@ function marginT(m: number): number {
   while (i < MARGIN_STOPS.length && m > MARGIN_STOPS[i]) i++;
   return i / MARGIN_STOPS.length;
 }
+
+/** Average time of a cell's correct answers, over every situation. */
+export function speedOf(s: CellStat | undefined): { n: number; ms: number } | null {
+  let n = 0;
+  let ms = 0;
+  for (const x of Object.values(s?.speed ?? {})) {
+    n += x.n;
+    ms += x.ms;
+  }
+  return n ? { n, ms: ms / n } : null;
+}
+// 1.5 s or faster is fully "fast"; 5 s or slower fully "slow".
+const speedT = (ms: number) => Math.max(0, Math.min(1, (ms - 1500) / 3500));
+export const fmtSecs = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
 
 export function useCellRenderer(table: StrategyTable | null, view: Prefs['chartView'], statsVersion = 0) {
   const stats = useMemo(() => (table ? cellStats(strategyKey(table.rules)) : {}), [table, statsVersion]);
@@ -37,6 +51,22 @@ export function useCellRenderer(table: StrategyTable | null, view: Prefs['chartV
           </>
         ),
         title: `${c.code}: beats the next-best play by ${pctv.toFixed(2)}% of a bet`,
+      };
+    }
+    if (view === 'speed') {
+      const sp = speedOf(stats[cellKey(row, up)]);
+      if (!sp) return { className: 'blank', content: <span className="muted">·</span>, title: 'No timed correct answers yet' };
+      const t = speedT(sp.ms);
+      return {
+        className: '',
+        style: { background: rampColor(ACCURACY_RAMP, t), color: t < 0.25 || t > 0.75 ? '#ffffff' : '#0b0b0b' },
+        content: (
+          <>
+            {c.code}
+            <span className="ev">{fmtSecs(sp.ms)}</span>
+          </>
+        ),
+        title: `${c.code}: ${fmtSecs(sp.ms)} on average over ${sp.n} correct answers`,
       };
     }
     if (view === 'weak') {
@@ -96,7 +126,8 @@ export default function StrategyChart() {
 
 export function ChartPage({ mistakes }: { mistakes: boolean }) {
   const { rules, prefs, setPrefs } = useSettings();
-  const view: Prefs['chartView'] = mistakes ? 'weak' : prefs.chartView === 'weak' ? 'actions' : prefs.chartView;
+  const [sub, setSub] = useState<'weak' | 'speed'>('weak');
+  const view: Prefs['chartView'] = mistakes ? sub : prefs.chartView === 'weak' || prefs.chartView === 'speed' ? 'actions' : prefs.chartView;
   const { table, progress, error } = useStrategy(rules);
   const [sel, setSel] = useState<string | null>(null);
   const [tab, setTab] = useState<'hard' | 'soft' | 'pair'>('hard');
@@ -124,6 +155,12 @@ export function ChartPage({ mistakes }: { mistakes: boolean }) {
         <span className="ramp" style={{ background: `linear-gradient(90deg, ${ACCURACY_RAMP.join(',')})`, border: '1px solid var(--border)' }} />
         <span>Often wrong</span>
       </div>
+    ) : view === 'speed' ? (
+      <div className="scale-bar">
+        <span>Fast</span>
+        <span className="ramp" style={{ background: `linear-gradient(90deg, ${ACCURACY_RAMP.join(',')})`, border: '1px solid var(--border)' }} />
+        <span>Slow</span>
+      </div>
     ) : (
       <ActionLegend />
     );
@@ -136,6 +173,20 @@ export function ChartPage({ mistakes }: { mistakes: boolean }) {
           <h1>{mistakes ? 'Mistake Chart' : 'Basic Strategy Chart'}</h1>
         </div>
         <div className="row no-print">
+          {mistakes && (
+            <Seg
+              label="Mistake chart view"
+              value={sub}
+              onChange={(v) => {
+                setSub(v);
+                setSel(null);
+              }}
+              options={[
+                { value: 'weak', label: 'Mistakes' },
+                { value: 'speed', label: 'Speed' },
+              ]}
+            />
+          )}
           {!mistakes && (
             <Seg
               label="Chart view"
@@ -178,7 +229,7 @@ export function ChartPage({ mistakes }: { mistakes: boolean }) {
             </div>
             <div className="chart-toolbar">
               {legend}
-              {view === 'weak' && (
+              {mistakes && (
                 <div className="row tight no-print">
                   {sections.map((s) => (
                     <button key={s.id} className={`btn danger small chart-reset ${s.id === tab ? 'on' : ''}`} onClick={() => setResetting({ sec: s, step: 1 })}>
@@ -196,7 +247,7 @@ export function ChartPage({ mistakes }: { mistakes: boolean }) {
               ))}
             </div>
           </div>
-          {cell && <ProofDrawer key={sel!} table={table} cell={cell} onClose={() => setSel(null)} stat={view === 'weak' ? stats[sel!] : undefined} />}
+          {cell && <ProofDrawer key={sel!} table={table} cell={cell} onClose={() => setSel(null)} stat={mistakes ? stats[sel!] : undefined} statView={sub} />}
         </div>
       )}
       {resetting && (

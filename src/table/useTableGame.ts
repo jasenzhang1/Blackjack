@@ -15,7 +15,7 @@ import { Table, type GameAvail, type Pending, type Player } from '../engine/game
 import { strategyKey, tableDecks, type Rules } from '../engine/rules';
 import { mulberry32, randomSeed } from '../engine/rng';
 import { advise, bestOf, cellKey, type StrategyTable } from '../engine/strategy';
-import { recordCell } from '../state/progress';
+import { recordCell, type Situation } from '../state/progress';
 import { engine } from '../worker/client';
 import type { Category, CountCheck, Decision, DecisionKind, DecisionRecord, RoundRecord } from './report';
 
@@ -260,6 +260,9 @@ export function useTableGame(setup: GameSetup, rules: Rules, strategy: StrategyT
     (kind: DecisionKind, cards: Rank[], up: Rank, g: Graded, meta: { coached?: boolean; hinted?: boolean } = {}, bet = 0) => {
       const id = `${t.roundId}-${decisions.current.length}`;
       const tc = tableTrueCount(t);
+      const p = t.pending();
+      const fromSplit = p.kind === 'action' && t.seats[p.seat].hands[p.hand].fromSplit;
+      const situation: Situation = fromSplit ? 'split' : cards.length > 2 ? 'multi' : 'two';
       const rec: DecisionRecord = {
         id,
         round: t.roundId,
@@ -281,13 +284,12 @@ export function useTableGame(setup: GameSetup, rules: Rules, strategy: StrategyT
         category: g.category,
         coached: meta.coached,
         hinted: meta.hinted,
+        cell: kind === 'play' && g.cell ? g.cell : undefined,
+        situation: kind === 'play' ? situation : undefined,
       };
       decisions.current.push(rec);
       decisionCountThisRound.current++;
       if (kind === 'play' && g.cell && !g.deviation) {
-        const p = t.pending();
-        const fromSplit = p.kind === 'action' && t.seats[p.seat].hands[p.hand].fromSplit;
-        const situation = fromSplit ? 'split' : cards.length > 2 ? 'multi' : 'two';
         recordCell(strategyKey(rulesRef.current), g.cell, g.ok, { situation, taken: g.taken, correct: g.correct, cards });
       }
       setFeedback({ ...g, id, kind, cards, up, tc, bet });

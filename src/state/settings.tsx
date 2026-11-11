@@ -12,7 +12,7 @@ export interface Prefs {
   /** Animation speed multiplier for the table (0.5 – 4). */
   speed: number;
   /** Strategy chart display: action letters, best EV, or decision margin heat-map. */
-  chartView: 'actions' | 'ev' | 'margin' | 'weak';
+  chartView: 'actions' | 'ev' | 'margin' | 'weak' | 'speed';
   /** Keyboard hints shown on buttons. */
   showKeys: boolean;
   /** Reduce motion (no card-flip / slide animations). */

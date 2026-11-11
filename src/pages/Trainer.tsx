@@ -6,7 +6,7 @@ import { HARD_ROWS, PAIR_ROWS, SOFT_ROWS, handValue, rowKey } from '../engine/ha
 import { strategyKey } from '../engine/rules';
 import { mulberry32, randomSeed, weightedIndex } from '../engine/rng';
 import { cellKey, type StrategyTable } from '../engine/strategy';
-import { cellStats, getTrainerStats, saveTrainerStats } from '../state/progress';
+import { cellStats, getTrainerStats, recordCellTime, saveTrainerStats } from '../state/progress';
 import { useSettings } from '../state/settings';
 import { load, save } from '../state/storage';
 import { ActionButtons, FeedbackBanner, InsurancePrompt, EarlyPrompt, TableView, WhyModal } from '../table/components';
@@ -209,6 +209,8 @@ export default function Trainer() {
     if (start == null) return;
     const ms = performance.now() - start;
     setTimes((t) => ({ ...t, [fresh[0].id]: ms }));
+    const d = fresh[0];
+    if (d.kind === 'play' && d.ok && d.cell && !d.deviationChecked && ms <= MAX_MS) recordCellTime(strategyKey(rules), d.cell, d.situation ?? 'two', ms);
   }, [plays.length, plays]);
   useEffect(() => {
     promptAt.current = promptKey ? performance.now() : null;

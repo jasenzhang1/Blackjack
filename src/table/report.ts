@@ -3,6 +3,7 @@
  */
 import type { Rank } from '../engine/cards';
 import type { Action, ActionEVs } from '../engine/ev';
+import type { Situation } from '../state/progress';
 
 export type Decision = Action | 'I' | 'N';
 export type DecisionKind = 'play' | 'insurance' | 'early';
@@ -32,6 +33,9 @@ export interface DecisionRecord {
   category: Category;
   coached?: boolean;
   hinted?: boolean;
+  /** Chart cell and situation of a play decision (for the per-cell stats). */
+  cell?: string;
+  situation?: Situation;
 }
 
 export interface CountCheck {

@@ -83,7 +83,36 @@ function Mistakes({ misses }: { misses: Record<string, Miss> }) {
   );
 }
 
-export function ProofDrawer({ table, cell, onClose, stat }: { table: StrategyTable; cell: Cell; onClose: () => void; stat?: CellStat }) {
+/** Average time of the correct answers, per situation. */
+function Speed({ speed }: { speed: NonNullable<CellStat['speed']> }) {
+  const list = (Object.entries(speed) as [Situation, { n: number; ms: number }][]).filter(([, x]) => x.n > 0).sort((a, b) => b[1].ms / b[1].n - a[1].ms / a[1].n);
+  if (!list.length) return null;
+  return (
+    <section>
+      <h4>Your speed</h4>
+      <table className="data">
+        <thead>
+          <tr>
+            <th>When</th>
+            <th className="num">Average</th>
+            <th className="num">Correct</th>
+          </tr>
+        </thead>
+        <tbody>
+          {list.map(([sit, x]) => (
+            <tr key={sit}>
+              <td>{SITUATION[sit]}</td>
+              <td className="num">{(x.ms / x.n / 1000).toFixed(1)}s</td>
+              <td className="num">{x.n}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  );
+}
+
+export function ProofDrawer({ table, cell, onClose, stat, statView = 'weak' }: { table: StrategyTable; cell: Cell; onClose: () => void; stat?: CellStat; statView?: 'weak' | 'speed' }) {
   const [play, setPlay] = useState<Action | null>(null);
   const { prefs, setPrefs } = useSettings();
   const best = cell.best;
@@ -111,7 +140,8 @@ export function ProofDrawer({ table, cell, onClose, stat }: { table: StrategyTab
         )}
       </div>
 
-      {stat?.misses && <Mistakes misses={stat.misses} />}
+      {statView === 'weak' && stat?.misses && <Mistakes misses={stat.misses} />}
+      {statView === 'speed' && stat?.speed && <Speed speed={stat.speed} />}
 
       <section>
         <div className="row between" style={{ marginBottom: 8 }}>
