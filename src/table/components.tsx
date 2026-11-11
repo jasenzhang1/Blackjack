@@ -258,7 +258,7 @@ export function CountPromptDialog({ prompt, systemId, askTC, onSubmit, onClose }
           }}
         >
           <p className="text-2">
-            What is the <strong>running count</strong> ({sys.name}) after every card you have seen since the shuffle, including the dealer's hole card?
+            <strong>Running count</strong> ({sys.name})?
           </p>
           <div className="count-input">
             <button type="button" className="btn" onClick={() => setRc(String((Number(rc) || 0) - (sys.level === 3 ? 0.5 : 1)))}>
@@ -272,7 +272,7 @@ export function CountPromptDialog({ prompt, systemId, askTC, onSubmit, onClose }
           {wantTC && (
             <>
               <p className="text-2" style={{ marginBottom: 0 }}>
-                And the <strong>true count</strong> (running count ÷ decks remaining)? Whole numbers are fine.
+<strong>True count</strong>?
               </p>
               <div className="count-input">
                 <input type="number" step={0.5} value={tc} onChange={(e) => setTc(e.target.value)} aria-label="True count" placeholder="0" />
@@ -341,9 +341,6 @@ export function FeedbackBanner({ fb, rules, unit, onNext, onWhy, bars = true, mo
         {bars && Object.keys(fb.ev).length > 1 && fb.kind === 'play' && (
           <div style={{ marginTop: 8, maxWidth: 520 }}>
             <EVBars ev={fb.ev} highlight={fb.correct as Action} />
-            <div className="muted small" style={{ marginTop: 4 }}>
-              {fb.exact ? 'Exact EVs for the actual cards left in the shoe.' : 'Chart EVs for this total (two-card compositions averaged).'}
-            </div>
           </div>
         )}
       </div>
@@ -394,8 +391,6 @@ export function CoachPanel({ game, mode, showCount, systemId }: { game: TableGam
         <h3>Coach</h3>
         <span className="chip">{mode === 'off' ? 'Off' : mode === 'hint' ? 'Hints on request' : mode === 'warn' ? 'Warns on mistakes' : 'Always on'}</span>
       </div>
-      {mode === 'off' && <p className="muted small">The coach is silent. Your decisions are still recorded for the report card.</p>}
-      {mode !== 'off' && !adv && <p className="muted small">Waiting for your next decision…</p>}
       {mode === 'hint' && adv && hintFor !== key && (
         <button className="btn" onClick={() => setHintFor(key)}>
           Show hint
@@ -408,10 +403,8 @@ export function CoachPanel({ game, mode, showCount, systemId }: { game: TableGam
           </div>
           <div className="muted small">{adv.deviation && adv.action !== 'R' && adv.reason !== 'Basic strategy' ? adv.reason : 'Basic strategy'}</div>
           <EVBars ev={adv.exactEv ?? adv.ev} />
-          <div className="muted small">{adv.exactEv ? 'Exact EVs for the cards left in the shoe.' : 'Chart EVs for this total.'}</div>
         </div>
       )}
-      {mode === 'warn' && adv && <p className="muted small">The coach will stop you if you pick a play that costs you money.</p>}
       {showCount && (
         <div className="stack" style={{ gap: 4, borderTop: '1px solid var(--border)', paddingTop: 10 }}>
           <div className="row between">

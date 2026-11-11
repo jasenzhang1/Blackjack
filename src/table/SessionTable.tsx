@@ -109,7 +109,7 @@ export function SessionTable({ mode, title }: { mode: 'countplay' | 'casino'; ti
               <Seg value={cfg.bots} onChange={(v) => set({ bots: v })} options={[0, 1, 2, 3, 4, 5].map((n) => ({ value: n, label: String(n) }))} />
             </div>
             {!Number.isFinite(rules.decks) && counting && <div className="callout bad">Counting cannot work against a continuous shuffler. The table will deal an 8-deck shoe with the cut card instead.</div>}
-            <div className="muted small">Rules: {describeRules(rules).join(' · ')}. Change them with "Edit rules" above.</div>
+            <div className="muted small">{describeRules(rules).join(' · ')}</div>
           </div>
           <div className="panel stack">
             <h3>{counting ? 'Assessment' : 'Coach'}</h3>
@@ -149,7 +149,7 @@ export function SessionTable({ mode, title }: { mode: 'countplay' | 'casino'; ti
                   Show feedback after every decision
                 </Check>
                 <Check checked={cfg.betHint} onChange={(v) => set({ betHint: v })}>
-                  Show a bet-ramp hint (1 unit at TC ≤ +1, then 2 units per count)
+                  Show a bet-ramp hint
                 </Check>
                 <Check checked={cfg.showDecks} onChange={(v) => set({ showDecks: v })}>
                   Label decks remaining (training wheels)
@@ -171,12 +171,11 @@ export function SessionTable({ mode, title }: { mode: 'countplay' | 'casino'; ti
                   />
                 </div>
                 <Check checked={cfg.showCount} onChange={(v) => set({ showCount: v })}>
-                  Coach shows the count (running, decks left, true count)
+                  Coach shows the count
                 </Check>
                 <Check checked={cfg.deviations} onChange={(v) => set({ deviations: v })}>
                   Coach uses count-based index plays
                 </Check>
-                <p className="muted small">Every decision is recorded either way. Open the report card at any time.</p>
               </>
             )}
             <button className="btn primary big" onClick={() => setStarted(true)}>
@@ -373,8 +372,7 @@ function Session({ mode, title, cfg, onLeave }: { mode: 'countplay' | 'casino'; 
           </div>
           {mode === 'casino' && <CoachPanel game={game} mode={cfg.coach} showCount={cfg.showCount} systemId={HI_LO.id} />}
           <div className="panel small text-2">
-            Keys: H S D P R for plays, N to decline insurance (Y to take it), Space to deal.
-            {mode === 'countplay' && ' Count every card you see, including the dealer\'s hole card when it is turned over. Reset to zero when the shoe is shuffled.'}
+            Keys: H S D P R · Y/N insurance · Space to deal
           </div>
         </div>
       </div>

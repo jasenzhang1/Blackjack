@@ -39,10 +39,6 @@ const SECTIONS: { title: string; tricks: { phrase: string; detail: string }[] }[
 export function MemoryTricks() {
   return (
     <div className="panel stack">
-      <div className="panel-title">
-        <h3>Memory tricks</h3>
-        <span className="muted small">4–8 decks, double after split</span>
-      </div>
       <div className="tricks">
         {SECTIONS.map((s) => (
           <div key={s.title} className="stack" style={{ gap: 8 }}>

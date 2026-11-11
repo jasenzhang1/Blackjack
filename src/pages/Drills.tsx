@@ -4,7 +4,8 @@ import { Seg, useKeys } from '../components/ui';
 import { buildShoe, type Card } from '../engine/cards';
 import { SYSTEMS, getSystem, type CountingSystem } from '../engine/counting';
 import { mulberry32, randomSeed, randInt, shuffle } from '../engine/rng';
-import { listDrills, saveDrill } from '../state/progress';
+import { saveDrill, type DrillResult } from '../state/progress';
+import { DrillStats } from './DrillStats';
 import { useSettings } from '../state/settings';
 
 type DrillId = 'tags' | 'flash' | 'countdown' | 'tc' | 'groups';
@@ -30,7 +31,7 @@ export default function Drills() {
     <main className="page">
       <div className="page-head">
         <div>
-          <h1>Counting drills</h1>
+          <h1>Counting Drills</h1>
         </div>
         <label className="field">
           Counting system
@@ -54,7 +55,7 @@ export default function Drills() {
         {drill === 'tc' && <TrueCountDrill />}
         {drill === 'groups' && <GroupsDrill key={sys.id} sys={sys} />}
       </div>
-      <History drill={drill} />
+      <DrillStats drill={drill} />
     </main>
   );
 }
@@ -69,31 +70,6 @@ function TagTable({ sys }: { sys: CountingSystem }) {
           {l} <strong className="num">{fmt(sys.tags[i + 1])}</strong>
         </span>
       ))}
-      <span className="muted small">{sys.balanced ? 'Balanced: a full deck sums to 0.' : 'Unbalanced.'}</span>
-    </div>
-  );
-}
-
-function History({ drill }: { drill: DrillId }) {
-  const list = listDrills(drill).slice(-6).reverse();
-  if (!list.length) return null;
-  return (
-    <div className="panel" style={{ marginTop: 14 }}>
-      <h3>Recent results</h3>
-      <table className="data">
-        <tbody>
-          {list.map((r) => (
-            <tr key={r.date}>
-              <td className="muted small">{new Date(r.date).toLocaleString()}</td>
-              <td className="num">
-                {r.score}/{r.total}
-              </td>
-              <td className="num">{(r.ms / 1000).toFixed(1)} s</td>
-              <td className="muted small">{r.detail}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </div>
   );
 }
@@ -112,13 +88,20 @@ function TagDrill({ sys }: { sys: CountingSystem }) {
   const [flashWrong, setFlashWrong] = useState<number | null>(null);
   const [start, setStart] = useState<number | null>(null);
   const [done, setDone] = useState<number | null>(null);
+  const log = useRef<NonNullable<DrillResult['cards']>>([]);
+  const lastT = useRef(0);
 
   const answer = (v: number) => {
     if (done !== null) return;
-    const s = start ?? Date.now();
+    const now = Date.now();
+    const s = start ?? now;
     if (!start) setStart(s);
     const correct = sys.tags[cards[i].rank];
     const wrong = v !== correct;
+    // The first card's time starts at the first answer, so it has no meaningful duration.
+    if (i === 0) log.current = [];
+    log.current.push({ r: cards[i].rank, ok: !wrong, ms: i === 0 ? 0 : now - lastT.current });
+    lastT.current = now;
     if (wrong) {
       setErrors((e) => e + 1);
       setFlashWrong(correct);
@@ -127,7 +110,7 @@ function TagDrill({ sys }: { sys: CountingSystem }) {
     if (i + 1 >= N) {
       const ms = Date.now() - s;
       setDone(ms);
-      saveDrill({ drill: 'tags', date: Date.now(), score: N - errors - (wrong ? 1 : 0), total: N, ms, detail: `${sys.name}, ${(ms / N / 1000).toFixed(2)} s/card` });
+      saveDrill({ drill: 'tags', date: Date.now(), score: N - errors - (wrong ? 1 : 0), total: N, ms, detail: `${sys.name}, ${(ms / N / 1000).toFixed(2)} s/card`, cards: log.current });
     } else setI(i + 1);
   };
   useKeys(
@@ -175,8 +158,7 @@ function TagDrill({ sys }: { sys: CountingSystem }) {
         </div>
       )}
       <div className="muted small">
-        Card {Math.min(i + 1, N)} of {N} · mistakes {errors}. Keys: 1–{values.length}
-        {values.length === 3 ? ' or ← (−1) ↓ (0) → (+1)' : ''}.
+        Card {Math.min(i + 1, N)} of {N} · mistakes {errors}
       </div>
     </div>
   );
@@ -304,19 +286,27 @@ function CountdownDrill({ sys }: { sys: CountingSystem }) {
   const [start, setStart] = useState(0);
   const [end, setEnd] = useState<number | null>(null);
   const [result, setResult] = useState<{ answer: number; actual: number } | null>(null);
+  const log = useRef<NonNullable<DrillResult['cards']>>([]);
+  const lastT = useRef(0);
   const begin = () => {
     const all = freshCards(1, rand.current);
     const k = randInt(rand.current, 1, 3);
     setHidden(all.slice(0, k));
     setDeck(all.slice(k));
     setI(0);
-    setStart(Date.now());
+    const now = Date.now();
+    setStart(now);
+    lastT.current = now;
+    log.current = [];
     setEnd(null);
     setResult(null);
   };
   const advance = () => {
     if (i < 0 || end !== null) return;
-    if (i + 1 >= deck.length) setEnd(Date.now());
+    const now = Date.now();
+    log.current.push({ r: deck[i].rank, ms: now - lastT.current });
+    lastT.current = now;
+    if (i + 1 >= deck.length) setEnd(now);
     else setI(i + 1);
   };
   useKeys(
@@ -332,10 +322,6 @@ function CountdownDrill({ sys }: { sys: CountingSystem }) {
   return (
     <div className="panel stack">
       <div className="widget-title">Count down a whole deck as fast as you can</div>
-      <p className="text-2 small">
-        One to three cards are secretly removed first. Press Space for each card. At the end, give your running count. For a balanced count the missing cards' tags are
-        exactly minus your answer, so this also checks how well you counted.
-      </p>
       <div className="flash-stage" onClick={advance} style={{ cursor: i >= 0 && end === null ? 'pointer' : undefined }}>
         {i < 0 ? (
           <button className="btn primary big" onClick={begin}>
@@ -354,13 +340,13 @@ function CountdownDrill({ sys }: { sys: CountingSystem }) {
           <div className="text-2">Done in {((end - start) / 1000).toFixed(1)} s. What is your count?</div>
         )}
       </div>
-      <div className="muted small">{i >= 0 && end === null ? `Card ${i + 1} of ${deck.length}. Space or click for the next card.` : 'Good players get under 25 seconds per deck with no errors.'}</div>
+      {i >= 0 && end === null && <div className="muted small">Card {i + 1} of {deck.length}</div>}
       {end !== null && !result && (
         <CountAnswer
           step={sys.level === 3 ? 0.5 : 1}
           onSubmit={(n) => {
             setResult({ answer: n, actual });
-            saveDrill({ drill: 'countdown', date: Date.now(), score: n === actual ? 1 : 0, total: 1, ms: end - start, detail: `${deck.length} cards` });
+            saveDrill({ drill: 'countdown', date: Date.now(), score: n === actual ? 1 : 0, total: 1, ms: end - start, detail: `${deck.length} cards`, cards: log.current });
           }}
         />
       )}
@@ -395,7 +381,6 @@ function TrueCountDrill() {
   return (
     <div className="panel stack">
       <div className="widget-title">Convert running count to true count</div>
-      <p className="text-2 small">Estimate the decks remaining from the discard tray (to the nearest half deck), then divide. Round or truncate as you prefer: both are accepted.</p>
       {n < total ? (
         <div className="row" style={{ gap: 30, alignItems: 'flex-end' }}>
           <div className="stack center" style={{ gap: 4 }}>
@@ -494,7 +479,6 @@ function GroupsDrill({ sys }: { sys: CountingSystem }) {
   return (
     <div className="panel stack">
       <div className="widget-title">Count a whole group at a glance</div>
-      <p className="text-2 small">Pros don't count card by card. They see a ten and a 5 and think "zero". The cards disappear after the time limit, then give the net count of the group.</p>
       <div className="row">
         <span className="muted small">Cards</span>
         <Seg value={size} onChange={setSize} options={[3, 4, 5, 6, 8].map((n) => ({ value: n, label: String(n) }))} />

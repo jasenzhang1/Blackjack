@@ -13,9 +13,9 @@ export default function Reports() {
   if (!sessions.length) {
     return (
       <main className="page">
-        <h1>Report cards</h1>
+        <h1>Report Cards</h1>
         <div className="panel">
-          <p className="text-2">No sessions yet. Play a session in the <Link to="/play">Casino</Link> or <Link to="/counting/play">Count & play</Link>. Each one is saved here with its grade.</p>
+          <p className="text-2">No sessions yet. Play a session in the <Link to="/play">Casino</Link> or <Link to="/counting/play">Count & Play</Link>.</p>
         </div>
       </main>
     );
@@ -25,7 +25,7 @@ export default function Reports() {
     <main className="page">
       <div className="page-head">
         <div>
-          <h1>Report cards</h1>
+          <h1>Report Cards</h1>
         </div>
       </div>
       <div className="side-layout" style={{ gridTemplateColumns: '340px minmax(0, 1fr)' }}>
@@ -40,7 +40,7 @@ export default function Reports() {
                       <strong style={{ color: gradeColor(sum.grade) }}>{sum.grade}</strong>
                     </td>
                     <td>
-                      <div>{s.mode === 'casino' ? 'Casino' : 'Count & play'}</div>
+                      <div>{s.mode === 'casino' ? 'Casino' : 'Count & Play'}</div>
                       <div className="muted small">{new Date(s.end).toLocaleString()}</div>
                     </td>
                     <td className="num">
@@ -58,7 +58,7 @@ export default function Reports() {
             <div className="panel stack">
               <div className="row between">
                 <h2 style={{ margin: 0 }}>
-                  {current.mode === 'casino' ? 'Casino' : 'Count & play'} · {new Date(current.start).toLocaleString()}
+                  {current.mode === 'casino' ? 'Casino' : 'Count & Play'} · {new Date(current.start).toLocaleString()}
                 </h2>
                 <button
                   className="btn small ghost"

@@ -9,6 +9,7 @@ const Home = lazy(() => import('./pages/Home'));
 const StrategyChart = lazy(() => import('./pages/StrategyChart'));
 const GridQuiz = lazy(() => import('./pages/GridQuiz'));
 const Trainer = lazy(() => import('./pages/Trainer'));
+const MemoryTricksPage = lazy(() => import('./pages/MemoryTricksPage'));
 const LearnCounting = lazy(() => import('./pages/LearnCounting'));
 const Drills = lazy(() => import('./pages/Drills'));
 const WatchCount = lazy(() => import('./pages/WatchCount'));
@@ -23,6 +24,7 @@ const ROUTES: Record<string, React.ComponentType> = {
   '/strategy': StrategyChart,
   '/strategy/quiz': GridQuiz,
   '/strategy/trainer': Trainer,
+  '/strategy/tricks': MemoryTricksPage,
   '/counting/learn': LearnCounting,
   '/counting/drills': Drills,
   '/counting/watch': WatchCount,
@@ -38,19 +40,20 @@ const GROUPS: { label: string; prefix: string; items: { to: string; label: strin
     label: 'Strategy',
     prefix: '/strategy',
     items: [
-      { to: '/strategy', label: 'Strategy chart' },
-      { to: '/strategy/quiz', label: 'Grid quiz' },
-      { to: '/strategy/trainer', label: 'Table trainer' },
+      { to: '/strategy', label: 'Strategy Chart' },
+      { to: '/strategy/tricks', label: 'Memory Tricks' },
+      { to: '/strategy/quiz', label: 'Grid Quiz' },
+      { to: '/strategy/trainer', label: 'Table Trainer' },
     ],
   },
   {
     label: 'Counting',
     prefix: '/counting',
     items: [
-      { to: '/counting/learn', label: 'Learn to count' },
+      { to: '/counting/learn', label: 'Learn to Count' },
       { to: '/counting/drills', label: 'Drills' },
-      { to: '/counting/watch', label: 'Watch & count' },
-      { to: '/counting/play', label: 'Count & play' },
+      { to: '/counting/watch', label: 'Watch & Count' },
+      { to: '/counting/play', label: 'Count & Play' },
     ],
   },
   {
@@ -58,7 +61,7 @@ const GROUPS: { label: string; prefix: string; items: { to: string; label: strin
     prefix: '/play',
     items: [
       { to: '/play', label: 'Casino' },
-      { to: '/reports', label: 'Report cards' },
+      { to: '/reports', label: 'Report Cards' },
     ],
   },
 ];
@@ -98,10 +101,10 @@ function TopNav() {
             </div>
           ))}
           <Link to="/rules" className="nav-link">
-            Rules lab
+            Rules Lab
           </Link>
           <Link to="/math" className="nav-link">
-            The math
+            The Math
           </Link>
         </nav>
         <div className="topnav-right">
@@ -136,9 +139,6 @@ export default function App() {
       <Suspense fallback={<div className="page muted">Loading…</div>}>
         <Page key={`${path}#${syncTick}`} />
       </Suspense>
-      <footer className="footer no-print">
-        Blackjack Lab: exact combinatorial EVs for every play. Practice money only. Card counting is a legal skill, but casinos may refuse your action.
-      </footer>
       {rulesDialogOpen && <RulesDialog />}
       <GuestReminder />
     </div>

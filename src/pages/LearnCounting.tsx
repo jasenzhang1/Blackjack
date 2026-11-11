@@ -30,7 +30,7 @@ export default function LearnCounting() {
     <main className="page">
       <div className="page-head">
         <div>
-          <h1>Learn to count cards</h1>
+          <h1>Learn to Count Cards</h1>
         </div>
       </div>
       <div className="lesson-layout">
@@ -372,7 +372,7 @@ function L5() {
           <>
             <LineChart
               series={[
-                { id: 'basic', label: 'Basic strategy', color: '#3987e5', points: data.map((d) => ({ x: d.tc, y: d.basic })) },
+                { id: 'basic', label: 'Basic Strategy', color: '#3987e5', points: data.map((d) => ({ x: d.tc, y: d.basic })) },
                 { id: 'perfect', label: 'Perfect play', color: '#d95926', points: data.map((d) => ({ x: d.tc, y: d.perfect })) },
               ]}
               xLabel="Hi-Lo true count"
@@ -381,10 +381,6 @@ function L5() {
               yFormat={(v) => `${(v * 100).toFixed(1)}%`}
               markers={breakEven !== null ? [{ x: breakEven, label: `break-even ≈ ${breakEven.toFixed(1)}` }] : undefined}
             />
-            <p className="small text-2">
-              Each point is an exact solution of the game for a shoe whose high/low balance matches that true count. "Perfect play" adapts every decision to the composition. The gap
-              between the lines is the value of playing deviations (next lesson).
-            </p>
           </>
         )}
       </div>
@@ -486,8 +482,7 @@ function L6() {
                 markers={crossing !== null ? [{ x: crossing, label: `lines cross ≈ ${crossing.toFixed(1)}` }] : undefined}
               />
               <p className="small text-2">
-                Published index: <strong>{describeDeviation(dev, rules)}</strong>. The engine's crossing point is {crossing !== null ? crossing.toFixed(1) : 'outside the range shown'}. Published indices come from
-                simulating many real shoes with Hi-Lo and rounding. These exact curves use one representative composition per count, so a difference of about ±1 is normal.
+                Published index: <strong>{describeDeviation(dev, rules)}</strong>
               </p>
             </>
           )}
@@ -517,10 +512,6 @@ function L6() {
           ))}
         </tbody>
       </table>
-      <p className="muted small" style={{ marginTop: 8 }}>
-        Read "16 vs 10, index 0" as: stand at a true count of 0 or more, otherwise hit. Negative indices (13 vs 2 at −1) mean the basic-strategy stand turns into a hit when the count falls
-        below the index. In Count & Play, a true count within ±0.5 of an index accepts either play.
-      </p>
     </>
   );
 }
@@ -546,7 +537,7 @@ function L7() {
           <strong>Watch & count</strong> at 1×, then 2×, then 4× with five players. <Link to="/counting/watch">Start here</Link>.
         </li>
         <li>
-          <strong>Count & play</strong> with basic strategy, then with index deviations (Feature 3b). <Link to="/counting/play">Take a seat</Link>.
+          <strong>Count & Play</strong> with basic strategy, then with index deviations (Feature 3b). <Link to="/counting/play">Take a seat</Link>.
         </li>
         <li>
           <strong>Casino</strong> with the coach off. Read the report card: accuracy, money lost to mistakes, and how well your bets tracked the count. <Link to="/play">Play</Link>.

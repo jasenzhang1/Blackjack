@@ -29,6 +29,16 @@ export function cellStats(rkey: string): Record<string, CellStat> {
   return load<CellStore>('cells', {})[rkey] ?? {};
 }
 
+/** Clears the accuracy history for every cell whose row is in `rows`. */
+export function resetCellStats(rkey: string, rows: string[]): void {
+  const all = load<CellStore>('cells', {});
+  const m = all[rkey];
+  if (!m) return;
+  const set = new Set(rows);
+  for (const k of Object.keys(m)) if (set.has(k.split('|')[0])) delete m[k];
+  save('cells', all);
+}
+
 export interface QuizAttempt {
   date: number;
   scope: string;
@@ -70,6 +80,8 @@ export interface DrillResult {
   total: number;
   ms: number;
   detail?: string;
+  /** Per-card log, in order: rank, whether the answer was right (omitted when not graded per card), ms spent on it. */
+  cards?: { r: number; ok?: boolean; ms: number }[];
 }
 
 export function saveDrill(r: DrillResult): void {

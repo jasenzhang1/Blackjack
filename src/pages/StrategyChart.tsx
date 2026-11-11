@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
-import { BLUE_RAMP, ORANGE_RAMP, inkOn, rampColor } from '../components/charts';
-import { MemoryTricks } from '../components/MemoryTricks';
+import { ACCURACY_RAMP, BLUE_RAMP, inkOn, rampColor } from '../components/charts';
 import { ProofDrawer } from '../components/ProofDrawer';
 import { ActionLegend, StrategyGrid, type CellView } from '../components/StrategyGrid';
 import { Progress, Seg, codeFill, codeFillClass, fmtEV } from '../components/ui';
@@ -8,7 +7,7 @@ import { type Rank } from '../engine/cards';
 import { ALL_HARD_ROWS, ALL_SOFT_ROWS, HARD_ROWS, PAIR_ROWS, SOFT_ROWS, rowKey, type RowKey } from '../engine/hand';
 import { strategyKey } from '../engine/rules';
 import { cellKey, type StrategyTable } from '../engine/strategy';
-import { cellStats } from '../state/progress';
+import { cellStats, resetCellStats } from '../state/progress';
 import { useSettings, type Prefs } from '../state/settings';
 import { useStrategy } from '../worker/client';
 
@@ -20,8 +19,8 @@ function marginT(m: number): number {
   return i / MARGIN_STOPS.length;
 }
 
-export function useCellRenderer(table: StrategyTable | null, view: Prefs['chartView']) {
-  const stats = useMemo(() => (table ? cellStats(strategyKey(table.rules)) : {}), [table]);
+export function useCellRenderer(table: StrategyTable | null, view: Prefs['chartView'], statsVersion = 0) {
+  const stats = useMemo(() => (table ? cellStats(strategyKey(table.rules)) : {}), [table, statsVersion]);
   return (row: RowKey, up: Rank): CellView => {
     const c = table?.cells[cellKey(row, up)];
     if (!c) return { className: 'blank', content: '·' };
@@ -47,7 +46,7 @@ export function useCellRenderer(table: StrategyTable | null, view: Prefs['chartV
       const t = Math.min(1, err * 2);
       return {
         className: '',
-        style: { background: rampColor(ORANGE_RAMP, t), color: inkOn(ORANGE_RAMP, t) },
+        style: { background: rampColor(ACCURACY_RAMP, t), color: t < 0.25 || t > 0.75 ? '#ffffff' : '#0b0b0b' },
         content: (
           <>
             {c.code}
@@ -86,7 +85,7 @@ export type ChartSection = { id: 'hard' | 'soft' | 'pair'; caption: string; rows
 export function chartSections(hideRedundant: boolean): ChartSection[] {
   return [
     { id: 'hard', caption: 'Hard totals', rows: (hideRedundant ? HARD_ROWS : ALL_HARD_ROWS).map((n) => rowKey('hard', n)).reverse() },
-    { id: 'soft', caption: 'Soft totals (ace counted as 11)', rows: (hideRedundant ? SOFT_ROWS : ALL_SOFT_ROWS).map((n) => rowKey('soft', n)).reverse() },
+    { id: 'soft', caption: 'Soft totals', rows: (hideRedundant ? SOFT_ROWS : ALL_SOFT_ROWS).map((n) => rowKey('soft', n)).reverse() },
     { id: 'pair', caption: 'Pairs', rows: PAIR_ROWS.map((n) => rowKey('pair', n)).reverse() },
   ];
 }
@@ -96,14 +95,21 @@ export default function StrategyChart() {
   const { table, progress, error } = useStrategy(rules);
   const [sel, setSel] = useState<string | null>(null);
   const [tab, setTab] = useState<'hard' | 'soft' | 'pair'>('hard');
-  const render = useCellRenderer(table, prefs.chartView);
+  const [statsVersion, setStatsVersion] = useState(0);
+  const render = useCellRenderer(table, prefs.chartView, statsVersion);
+  const sections = chartSections(!prefs.showRepeatedRows);
+  const resetSection = (s: ChartSection) => {
+    if (!table || !window.confirm(`Reset your ${s.caption.toLowerCase()} history?`)) return;
+    resetCellStats(strategyKey(table.rules), s.rows);
+    setStatsVersion((v) => v + 1);
+  };
   const cell = table && sel ? table.cells[sel] : null;
 
   return (
     <main className="page">
       <div className="page-head">
         <div>
-          <h1>Basic strategy chart</h1>
+          <h1>Basic Strategy Chart</h1>
         </div>
         <div className="row no-print">
           <Seg
@@ -126,9 +132,6 @@ export default function StrategyChart() {
       {!table && !error && (
         <div className="panel">
           <Progress value={progress} label={`Computing the exact EV of every play in every cell… ${Math.round(progress * 100)}%`} />
-          <p className="muted small" style={{ marginTop: 10 }}>
-            Hundreds of thousands of card-removal sub-problems are solved in a background thread. Results are cached, so this only happens once per rule set.
-          </p>
         </div>
       )}
 
@@ -149,9 +152,14 @@ export default function StrategyChart() {
               />
             </div>
             <div className="stack" style={{ gap: 18 }}>
-              {chartSections(!prefs.showRepeatedRows).map((s) => (
+              {sections.map((s) => (
                 <div key={s.id} className={`chart-sec ${s.id === tab ? 'on' : ''}`}>
                   <StrategyGrid caption={s.caption} rows={s.rows} cell={render} selected={sel} onCell={(row, up) => setSel(cellKey(row, up))} />
+                  {prefs.chartView === 'weak' && (
+                    <button className="btn ghost small no-print" style={{ marginTop: 6 }} onClick={() => resetSection(s)}>
+                      Reset {s.caption.toLowerCase()} history
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -161,30 +169,21 @@ export default function StrategyChart() {
                   <span>Close call</span>
                   <span className="ramp" style={{ background: `linear-gradient(90deg, ${BLUE_RAMP.join(',')})` }} />
                   <span>Big edge</span>
-                  <span className="muted">Each number is how much the best play beats the runner-up, in % of a bet.</span>
                 </div>
               ) : prefs.chartView === 'weak' ? (
                 <div className="scale-bar">
                   <span>Always right</span>
-                  <span className="ramp" style={{ background: `linear-gradient(90deg, ${ORANGE_RAMP.join(',')})` }} />
+                  <span className="ramp" style={{ background: `linear-gradient(90deg, ${ACCURACY_RAMP.join(',')})`, border: '1px solid var(--border)' }} />
                   <span>Often wrong</span>
-                  <span className="muted">From your grid-quiz and trainer history (correct/attempts).</span>
                 </div>
               ) : (
                 <ActionLegend />
               )}
-              <p className="muted small">
-                Columns are the dealer's upcard. Two-card hands. After three or more cards, play the same total but without doubling or surrendering (so Dh becomes hit
-                and Ds becomes stand). House edge with this chart: <strong>{(table.houseEdge * 100).toFixed(3)}%</strong>.
-              </p>
             </div>
           </div>
           {cell && <ProofDrawer key={sel!} table={table} cell={cell} onClose={() => setSel(null)} />}
         </div>
       )}
-      <div className="no-print" style={{ marginTop: 18 }}>
-        <MemoryTricks />
-      </div>
     </main>
   );
 }

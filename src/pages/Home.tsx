@@ -9,34 +9,35 @@ import { useStrategy } from '../worker/client';
 /** Every game and lesson, shown as buttons on the home page on phones and tablets. */
 const LAUNCHER: { label: string; items: { to: string; label: string; sub: string }[] }[] = [
   {
-    label: 'Basic strategy',
+    label: 'Basic Strategy',
     items: [
-      { to: '/strategy', label: 'Strategy chart', sub: 'Every play, with proofs' },
-      { to: '/strategy/quiz', label: 'Grid quiz', sub: 'Fill in the chart' },
-      { to: '/strategy/trainer', label: 'Table trainer', sub: 'Play hands, get graded' },
+      { to: '/strategy', label: 'Strategy Chart', sub: 'Every play, with proofs' },
+      { to: '/strategy/tricks', label: 'Memory Tricks', sub: 'Phrases for the chart' },
+      { to: '/strategy/quiz', label: 'Grid Quiz', sub: 'Fill in the chart' },
+      { to: '/strategy/trainer', label: 'Table Trainer', sub: 'Play hands, get graded' },
     ],
   },
   {
-    label: 'Card counting',
+    label: 'Card Counting',
     items: [
-      { to: '/counting/learn', label: 'Learn to count', sub: 'Seven lessons' },
+      { to: '/counting/learn', label: 'Learn to Count', sub: 'Seven lessons' },
       { to: '/counting/drills', label: 'Drills', sub: 'Tags, counts, conversion' },
-      { to: '/counting/watch', label: 'Watch & count', sub: 'Count simulated players' },
-      { to: '/counting/play', label: 'Count & play', sub: 'Play while counting' },
+      { to: '/counting/watch', label: 'Watch & Count', sub: 'Count simulated players' },
+      { to: '/counting/play', label: 'Count & Play', sub: 'Play while counting' },
     ],
   },
   {
     label: 'Play',
     items: [
       { to: '/play', label: 'Casino', sub: 'Bankroll with a coach' },
-      { to: '/reports', label: 'Report cards', sub: 'Past sessions' },
+      { to: '/reports', label: 'Report Cards', sub: 'Past sessions' },
     ],
   },
   {
     label: 'Explore',
     items: [
-      { to: '/rules', label: 'Rules lab', sub: 'House edge by rule' },
-      { to: '/math', label: 'The math', sub: 'All the proofs' },
+      { to: '/rules', label: 'Rules Lab', sub: 'House edge by rule' },
+      { to: '/math', label: 'The Math', sub: 'All the proofs' },
     ],
   },
 ];
@@ -93,15 +94,14 @@ export default function Home() {
             Master the <em>count</em>.
           </h1>
           <p className="lead">
-            Blackjack Lab is a basic-strategy and card-counting trainer that shows its work. Every play in the chart comes with an exact expected-value proof. You can practice the
-            count against simulated players and play a bankroll with a coach at your shoulder.
+            A basic-strategy and card-counting trainer with an exact EV proof for every play.
           </p>
           <div className="row" style={{ marginTop: 18 }}>
             <Link to="/strategy" className="btn primary big">
               Open the strategy chart
             </Link>
             <Link to="/counting/learn" className="btn big">
-              Learn to count
+              Learn to Count
             </Link>
             <button className="btn ghost" onClick={openRules}>
               Set your table's rules
@@ -119,22 +119,27 @@ export default function Home() {
         <div className="track-card">
           <div className="row">
             <span className="step">1</span>
-            <h2 style={{ margin: 0 }}>Basic strategy</h2>
+            <h2 style={{ margin: 0 }}>Basic Strategy</h2>
           </div>
           <ul>
             <li>
               <Link to="/strategy">
-                Interactive chart
+                Interactive Chart
+              </Link>
+            </li>
+            <li>
+              <Link to="/strategy/tricks">
+                Memory Tricks
               </Link>
             </li>
             <li>
               <Link to="/strategy/quiz">
-                Grid quiz
+                Grid Quiz
               </Link>
             </li>
             <li>
               <Link to="/strategy/trainer">
-                Table trainer
+                Table Trainer
               </Link>
             </li>
           </ul>
@@ -142,7 +147,7 @@ export default function Home() {
         <div className="track-card">
           <div className="row">
             <span className="step">2</span>
-            <h2 style={{ margin: 0 }}>Card counting</h2>
+            <h2 style={{ margin: 0 }}>Card Counting</h2>
           </div>
           <ul>
             <li>
@@ -157,12 +162,12 @@ export default function Home() {
             </li>
             <li>
               <Link to="/counting/watch">
-                Watch & count
+                Watch & Count
               </Link>
             </li>
             <li>
               <Link to="/counting/play">
-                Count & play
+                Count & Play
               </Link>
             </li>
           </ul>
@@ -180,12 +185,12 @@ export default function Home() {
             </li>
             <li>
               <Link to="/reports">
-                Report cards
+                Report Cards
               </Link>
             </li>
             <li>
               <Link to="/rules">
-                Rules lab
+                Rules Lab
               </Link>
             </li>
           </ul>
@@ -229,8 +234,7 @@ export default function Home() {
                 is about <strong>{fmtMoney(hourly!)}</strong> an hour.
               </p>
               <p className="text-2">
-                If blackjack paid 6:5 instead of 3:2, you would give up another <strong>{fmtPct(sixFiveCost!, 2)}</strong>, roughly {fmtMoney(sixFiveCost! * prefs.unit * handsPerHour)} an hour. That
-                one rule costs about four times what a whole session of good strategy keeps.
+                If blackjack paid 6:5 instead of 3:2, you would give up another <strong>{fmtPct(sixFiveCost!, 2)}</strong>, roughly {fmtMoney(sixFiveCost! * prefs.unit * handsPerHour)} an hour.
               </p>
             </>
           ) : (
@@ -240,8 +244,7 @@ export default function Home() {
         <div className="panel">
           <h3>How it works</h3>
           <p className="text-2">
-            A combinatorial engine runs in your browser. For each upcard it enumerates every possible sequence of dealer draws, then solves the player's choices with exact card
-            removal. These are the same methods professional analyzers use, and they're checked against brute force and simulation.
+            A combinatorial engine in your browser solves every play with exact card removal.
           </p>
           <Link to="/math">Read the proofs →</Link>
         </div>

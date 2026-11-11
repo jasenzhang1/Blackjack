@@ -24,7 +24,7 @@ export default function WatchCount() {
   if (!table) {
     return (
       <main className="page">
-        <h1>Watch & count</h1>
+        <h1>Watch & Count</h1>
         <div className="panel">
           <Progress value={progress} label="Preparing the simulated players' strategy…" />
         </div>
@@ -36,7 +36,7 @@ export default function WatchCount() {
     <main className="page">
       <div className="page-head">
         <div>
-          <h1>Watch & count</h1>
+          <h1>Watch & Count</h1>
         </div>
       </div>
       <div className="panel tight row" style={{ marginBottom: 12 }}>
@@ -78,7 +78,7 @@ export default function WatchCount() {
       {!started ? (
         <div className="panel stack" style={{ alignItems: 'flex-start' }}>
           <p className="text-2">
-            Count every card that is turned face up: players' cards, the dealer's upcard, the hole card when it is flipped, and every hit. When the dealer shuffles, reset your count
+            Count every face-up card. Reset on the shuffle
             {getSystem(prefs.countingSystem).irc ? ` to ${getSystem(prefs.countingSystem).irc!(tableDecks(rules))}` : ' to 0'}.
           </p>
           <button className="btn primary big" onClick={() => setStarted(true)}>
@@ -200,9 +200,6 @@ function Watch({ bots, freq, askTC, wheels, showDecks }: { bots: number; freq: C
             </table>
           </div>
         )}
-        <div className="panel small text-2">
-          Tips: cancel pairs (a ten and a 5 net to zero), count each hand as a group once its cards are out, and keep your eyes on the cards rather than the players.
-        </div>
       </div>
       {game.countPrompt && (
         <CountPromptDialog

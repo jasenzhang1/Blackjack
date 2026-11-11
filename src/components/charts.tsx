@@ -336,6 +336,9 @@ export function DivergingColumns({
 export const BLUE_RAMP = ['#0d366b', '#104281', '#184f95', '#1c5cab', '#256abf', '#2a78d6', '#3987e5', '#5598e7', '#6da7ec', '#86b6ef', '#9ec5f4'];
 export const ORANGE_RAMP = ['#3d1d10', '#5a2914', '#773518', '#94411c', '#b14d21', '#d95926', '#e0723f', '#e78b5a', '#eea476', '#f4bd95', '#f8d3b7'];
 
+/** Diverging blue → white → red, for "always right" → "often wrong". */
+export const ACCURACY_RAMP = ['#1c5cab', '#3987e5', '#6da7ec', '#9ec5f4', '#cfe1f8', '#ffffff', '#f8cfcf', '#f09e9e', '#e36b6b', '#d13b3b', '#a91f1f'];
+
 export function rampColor(ramp: string[], t: number): string {
   const i = Math.max(0, Math.min(ramp.length - 1, Math.round(t * (ramp.length - 1))));
   return ramp[i];

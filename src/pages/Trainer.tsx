@@ -202,7 +202,7 @@ export default function Trainer() {
   if (!table) {
     return (
       <main className="page">
-        <h1>Table trainer</h1>
+        <h1>Table Trainer</h1>
         <div className="panel">
           <Progress value={progress} label="Preparing the exact strategy for these rules…" />
         </div>
@@ -215,7 +215,7 @@ export default function Trainer() {
   return (
     <main className="page trainer-page">
       <div className="trainer-head">
-        <h1>Table trainer</h1>
+        <h1>Table Trainer</h1>
         <button className="btn small ghost" onClick={() => setOptsOpen(true)} title="Practice settings">
           ⚙ {filterLabel}
         </button>
@@ -227,7 +227,7 @@ export default function Trainer() {
           {game.feedback ? (
             <FeedbackBanner fb={game.feedback} rules={rules} unit={prefs.unit} onWhy={() => setWhy(true)} bars={false} money={false} />
           ) : (
-            <div className="muted small">Make a play and you'll see here whether it was right.</div>
+            <div className="muted small">Nothing yet.</div>
           )}
         </section>
 
@@ -398,7 +398,6 @@ function StatsModal({ plays, times, onClose }: { plays: Play[]; times: Record<st
   return (
     <Modal title="Session details" onClose={onClose}>
       <div className="stack" style={{ gap: 18 }}>
-        <div className="muted small">This session only. Decisions slower than a minute are left out of the time averages.</div>
         <div className="details-grid">
           <AggTable title="By hand type" rows={byType} first="Hand" />
           <AggTable title="By dealer upcard" rows={byUp} first="Dealer" />

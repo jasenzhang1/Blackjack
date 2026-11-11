@@ -4,7 +4,7 @@ export default function CountPlay() {
   return (
     <SessionTable
       mode="countplay"
-      title="Count & play"
+      title="Count & Play"
     />
   );
 }

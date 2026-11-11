@@ -14,7 +14,7 @@ export default function MathPage() {
     <main className="page math-page">
       <div className="page-head">
         <div>
-          <h1>The math behind every number</h1>
+          <h1>The Math Behind Every Number</h1>
         </div>
       </div>
       <article className="lesson" style={{ maxWidth: 900 }}>

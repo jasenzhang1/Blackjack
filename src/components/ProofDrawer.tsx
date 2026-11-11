@@ -86,9 +86,6 @@ export function ProofDrawer({ table, cell, onClose }: { table: StrategyTable; ce
         {prefs.playView === 'ev' ? (
           <>
             <EVBars ev={cell.ev} highlight={best} onPick={setPlay} />
-            <p className="muted small" style={{ marginTop: 6 }}>
-              Tap a value to see the math.
-            </p>
           </>
         ) : (
           <CellOutcomes rules={table.rules} cell={cell} onPick={setPlay} />
@@ -170,9 +167,6 @@ function CellOutcomes({ rules, cell, onPick }: { rules: Rules; cell: Cell; onPic
           </span>
         ))}
       </div>
-      <p className="muted small" style={{ marginTop: 6 }}>
-        Net result in bets. A bigger std dev means bigger swings. Tap a play for its numbers.{data.simulated.P ? ' Split is simulated.' : ''}
-      </p>
     </>
   );
 }
@@ -211,9 +205,7 @@ function OutcomeTable({ o, simulated }: { o: Outcomes; simulated?: number }) {
         </tbody>
       </table>
       {simulated && (
-        <p className="muted small">
-          Simulated from {simulated.toLocaleString()} rounds that follow the same strategy, so it can differ from the exact EV in the last decimal places.
-        </p>
+        <p className="muted small">Simulated ({simulated.toLocaleString()} rounds).</p>
       )}
     </div>
   );
@@ -235,9 +227,6 @@ function PlayProofModal({ rules, cell, play, onBack, onClose }: { rules: Rules; 
         {o ? <OutcomeTable o={o} simulated={dist!.simulated[play]} /> : <p className="muted small">Computing the distribution of outcomes…</p>}
         {comps.length > 1 && (
           <div style={{ marginBottom: 12 }}>
-            <p className="small text-2" style={{ marginBottom: 6 }}>
-              This hand can be dealt {comps.length} ways. The chart value is their average, weighted by how often each is dealt:
-            </p>
             <table className="data">
               <thead>
                 <tr>
@@ -261,7 +250,6 @@ function PlayProofModal({ rules, cell, play, onBack, onClose }: { rules: Rules; 
                 </tr>
               </tbody>
             </table>
-            <p className="muted small">Tap a row to see the math for those cards.</p>
           </div>
         )}
         <div className="row tight" style={{ marginBottom: 6 }}>
@@ -402,7 +390,6 @@ function ProofBody({ x, rules, onDrill, depth, only }: { x: Explanation; rules: 
                 </tr>
               </tbody>
             </table>
-            {onDrill && <p className="muted small">Click any non-bust row to see how its EV* was derived (the recursion one level down).</p>}
           </div>
         </details>
       )}
@@ -416,7 +403,6 @@ function ProofBody({ x, rules, onDrill, depth, only }: { x: Explanation; rules: 
             <div className="formula">
               <TeX block>{String.raw`\mathrm{EV}_D = 2\sum_{c} ${conditional ? String.raw`P(c \mid \text{no BJ})` : 'P(c)'}\;\mathrm{EV}_S(\text{hand} + c)`}</TeX>
             </div>
-            <p className="small text-2">You double the bet and receive exactly one card, then must stand. So each term uses the stand EV of the final hand.</p>
             <table className="data">
               <thead>
                 <tr>
@@ -478,9 +464,7 @@ function ProofBody({ x, rules, onDrill, depth, only }: { x: Explanation; rules: 
       {x.earlyConversion && (
         <div className="callout info small" style={{ marginTop: 10 }}>
           <strong>Early surrender basis.</strong> The surrender decision is made before the peek, so the other plays are converted to the same pre-peek basis:
-          <TeX block>{String.raw`\mathrm{EV}_{\text{pre}} = -P(\text{BJ}) + \bigl(1-P(\text{BJ})\bigr)\,\mathrm{EV}_{\text{post}},\quad P(\text{BJ}) = ${tp(x.pBJ)}`}</TeX>
-          The tables above show the post-peek derivation. The headline numbers are pre-peek.
-        </div>
+          <TeX block>{String.raw`\mathrm{EV}_{\text{pre}} = -P(\text{BJ}) + \bigl(1-P(\text{BJ})\bigr)\,\mathrm{EV}_{\text{post}},\quad P(\text{BJ}) = ${tp(x.pBJ)}`}</TeX>        </div>
       )}
 
       <details className="acc">
@@ -542,7 +526,6 @@ function StandProof({ x, enhc, t }: { x: Explanation; enhc: boolean; t: number }
             <TeX block>{String.raw`\mathrm{EV}_S = P(\text{win}) - P(\text{lose}) = ${tp(x.stand.win)} - ${tp(x.stand.lose)} = ${tp(x.stand.ev)}\quad(\text{push } ${tp(x.stand.push)})`}</TeX>
           )}
         </div>
-        {t < 17 && <p className="muted small">With {t} you can only win when the dealer busts. That is why every total from 12 to 16 has the same stand EV against a given upcard.</p>}
       </div>
     </details>
   );
@@ -598,14 +581,8 @@ function SplitProof({ x, rules, pLabel, open }: { x: Explanation; rules: Rules; 
             {XL}-{XL} total worth {fmtEV(s.ePairFinal)}. An exact Markov chain over (pending hands, hands so far) gives the expected number of finished hands of each kind:
           </p>
           <TeX block>{String.raw`\bar n_{\neg ${XL}} = ${s.nNonPair.toFixed(4)},\qquad \bar n_{${XL}${XL}} = ${s.nPairFinal.toFixed(4)}`}</TeX>
-          <p className="muted">Expected number of hands: {(s.nNonPair + s.nPairFinal).toFixed(4)}.</p>
           <TeX block>{String.raw`\mathrm{EV}_P = \bar n_{\neg ${XL}}\,\bar E_{\neg ${XL}} + \bar n_{${XL}${XL}}\,E_{${XL}${XL}}`}</TeX>
-          <TeX block>{String.raw`= ${s.nNonPair.toFixed(4)}\times(${tp(s.eNonPair)}) + ${s.nPairFinal.toFixed(4)}\times(${tp(s.ePairFinal)}) = ${tp(s.ev)}`}</TeX>
-          <p className="muted">
-            This is the total over all split hands, per unit of the original bet. The per-hand values use the shoe with both {XL}s removed. That is the standard approximation used by
-            combinatorial analyzers, and it is exact for an infinite deck. A simulation test in this project confirms it to within sampling error.
-          </p>
-        </div>
+          <TeX block>{String.raw`= ${s.nNonPair.toFixed(4)}\times(${tp(s.eNonPair)}) + ${s.nPairFinal.toFixed(4)}\times(${tp(s.ePairFinal)}) = ${tp(s.ev)}`}</TeX>        </div>
       </div>
     </details>
   );
@@ -627,8 +604,7 @@ export function DealerTreeView({ rules, removed, up }: { rules: Rules; removed: 
     <div className="small">
       <p className="text-2">
         The dealer's play is fixed: draw to 17, {rules.hitSoft17 ? 'hitting' : 'standing on'} soft 17. Each node's probability of finishing at each total is the
-        probability-weighted average of its children: <TeX>{String.raw`D(\text{node}) = \sum_c P(c)\,D(\text{node}+c)`}</TeX>. Expand the drawing nodes to follow the tree.
-        (Unconditional view: with an A or T up, the blackjack branch is shown. After a peek it is removed and the rest renormalised.)
+        probability-weighted average of its children: <TeX>{String.raw`D(\text{node}) = \sum_c P(c)\,D(\text{node}+c)`}</TeX>.
       </p>
       <TreeNode rules={rules} removed={removed} up={up} path={[]} depth={0} />
     </div>

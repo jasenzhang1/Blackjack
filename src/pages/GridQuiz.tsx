@@ -5,7 +5,7 @@ import { Check, Progress, Seg, Tag, codeFill, codeFillClass, useKeys } from '../
 import { UPCARDS, type Rank } from '../engine/cards';
 import { rowLabel, type RowKey } from '../engine/hand';
 import { rankLabel } from '../engine/cards';
-import { describeRules, rulesKey, strategyKey } from '../engine/rules';
+import { rulesKey, strategyKey } from '../engine/rules';
 import { cellKey } from '../engine/strategy';
 import { listQuizAttempts, recordCell, saveQuizAttempt } from '../state/progress';
 import { useSettings } from '../state/settings';
@@ -24,7 +24,7 @@ function fmtTime(ms: number) {
 }
 
 export default function GridQuiz() {
-  const { rules, prefs, openRules } = useSettings();
+  const { rules, prefs } = useSettings();
   const { table, progress } = useStrategy(rules);
   const [scope, setScope] = useState<Scope>('hard');
   const [strict, setStrict] = useState(false);
@@ -198,7 +198,7 @@ export default function GridQuiz() {
   if (!table) {
     return (
       <main className="page">
-        <h1>Grid quiz</h1>
+        <h1>Grid Quiz</h1>
         <div className="panel">
           <Progress value={progress} label="Computing the answer key for these rules…" />
         </div>
@@ -210,18 +210,7 @@ export default function GridQuiz() {
     <main className="page">
       <div className="page-head">
         <div>
-          <h1>Grid quiz</h1>
-          <div className="row tight small" style={{ marginTop: 6 }}>
-            <span className="muted">Graded for:</span>
-            {describeRules(rules).map((c) => (
-              <span className="chip" key={c}>
-                {c}
-              </span>
-            ))}
-            <button className="btn ghost small" onClick={openRules}>
-              Change
-            </button>
-          </div>
+          <h1>Grid Quiz</h1>
         </div>
         <div className="row">
           <Seg
@@ -291,9 +280,6 @@ export default function GridQuiz() {
                     </button>
                   ))}
                 </div>
-                <div className="muted small">
-                  {strict ? 'Strict mode: Dh = double, otherwise hit. Ds = double, otherwise stand. Rh/Rs/Rp = surrender, otherwise hit/stand/split. Keys 1–8. Backspace clears.' : 'Keys H S D P R fill the highlighted cell and move right. Backspace clears.'}
-                </div>
                 <Progress value={filled / keys.length} label={`${filled} of ${keys.length} cells filled`} />
                 <div className="row">
                   <button className="btn primary" onClick={check} disabled={checked || filled === 0}>
@@ -317,7 +303,6 @@ export default function GridQuiz() {
                     <div className="callout good">Perfect chart! Try strict mode or the whole chart next.</div>
                   ) : (
                     <>
-                      <div className="muted small">Click a cell (or a row below) to see why the answer is what it is:</div>
                       <table className="data">
                         <tbody>
                           {mistakes.slice(0, 40).map((k) => {

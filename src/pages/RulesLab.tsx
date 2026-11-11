@@ -32,7 +32,7 @@ export default function RulesLab() {
     <main className="page">
       <div className="page-head">
         <div>
-          <h1>Rules lab</h1>
+          <h1>Rules Lab</h1>
         </div>
       </div>
       <div className="grid-2">
@@ -46,10 +46,6 @@ export default function RulesLab() {
             {table ? (
               <>
                 <div style={{ fontSize: 56, fontWeight: 800, lineHeight: 1.1 }}>{fmtPct(table.houseEdge, 3)}</div>
-                <div className="text-2 small">
-                  {table.houseEdge < 0 ? 'Player advantage! ' : ''}Composition-dependent play of the first two cards: {fmtPct(table.houseEdgeCD, 3)}. Player blackjack {fmtPct(table.pPlayerBJ, 2)} of
-                  hands. Solved in {Math.round(table.ms)} ms.
-                </div>
               </>
             ) : (
               <Progress value={progress} label="Solving…" />
@@ -69,8 +65,8 @@ export default function RulesLab() {
             </div>
             {table && (
               <p className="text-2" style={{ marginTop: 10 }}>
-                Expected loss: <strong>{fmtMoney(table.houseEdge * bet * hands)}</strong> per hour with perfect basic strategy (you wager {fmtMoney(bet * hands)} an hour). If blackjacks paid 6:5
-                instead of {rules.blackjackPays === 1.5 ? '3:2' : 'this payout'}, you would lose an extra <strong>{fmtMoney(table.pPlayerBJWin * (rules.blackjackPays - 1.2) * bet * hands)}</strong> per hour.
+                Expected loss: <strong>{fmtMoney(table.houseEdge * bet * hands)}</strong> per hour. At 6:5 blackjack: an extra{' '}
+                <strong>{fmtMoney(table.pPlayerBJWin * (rules.blackjackPays - 1.2) * bet * hands)}</strong>.
               </p>
             )}
           </div>
@@ -79,7 +75,6 @@ export default function RulesLab() {
 
       <div className="panel" style={{ marginTop: 16 }}>
         <h3>Value of every rule (exact)</h3>
-        <p className="muted small">Each row re-solves the game with one rule changed and everything else as above. Positive Δ is worse for you. Click a row to adopt it.</p>
         {!effects ? (
           <Progress value={effProgress} label={`Solving ${Math.round(effProgress * 100)}% of the variants…`} />
         ) : (

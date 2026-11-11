@@ -201,8 +201,7 @@ export function ReportCard({ report }: { report: SessionReport }) {
         </div>
       )}
       <p className="muted small">
-        Rules: {report.rulesChips.join(' · ')}. House edge {fmtPct(report.houseEdge, 2)}. "Expected" is what this session should have returned on average given your bets and your mistakes
-        {report.mode === 'countplay' ? ' (using ≈ +0.5% per true count)' : ''}. "Luck" is the rest.
+        {report.rulesChips.join(' · ')} · house edge {fmtPct(report.houseEdge, 2)}
       </p>
     </div>
   );
