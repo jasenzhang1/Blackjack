@@ -16,7 +16,7 @@ const SECTIONS: { title: string; tricks: { phrase: string; detail: string }[] }[
     ],
   },
   {
-    title: 'Soft totals',
+    title: 'Soft Totals',
     tricks: [
       { phrase: 'Soft 19 and 20 stand.', detail: '(H17: double A,8 vs 6.)' },
       { phrase: 'Soft 18: double 3–6, stand 2, 7, 8, hit 9–A.', detail: '(H17: double vs 2 too.)' },
@@ -24,7 +24,7 @@ const SECTIONS: { title: string; tricks: { phrase: string; detail: string }[] }[
     ],
   },
   {
-    title: 'Hard totals',
+    title: 'Hard Totals',
     tricks: [
       { phrase: '17 and up, always stand.', detail: '(H17: surrender 17 vs A if you can.)' },
       { phrase: '13–16: stand vs 2–6, hit vs 7–A.', detail: 'A dealer 2–6 is the one that busts most.' },

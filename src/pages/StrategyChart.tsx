@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { ACCURACY_RAMP, BLUE_RAMP, inkOn, rampColor } from '../components/charts';
 import { ProofDrawer } from '../components/ProofDrawer';
 import { ActionLegend, StrategyGrid, type CellView } from '../components/StrategyGrid';
-import { Progress, Seg, codeFill, codeFillClass, fmtEV } from '../components/ui';
+import { Modal, Progress, Seg, codeFill, codeFillClass, fmtEV } from '../components/ui';
 import { type Rank } from '../engine/cards';
 import { ALL_HARD_ROWS, ALL_SOFT_ROWS, HARD_ROWS, PAIR_ROWS, SOFT_ROWS, rowKey, type RowKey } from '../engine/hand';
 import { strategyKey } from '../engine/rules';
@@ -84,8 +84,8 @@ export type ChartSection = { id: 'hard' | 'soft' | 'pair'; caption: string; rows
 /** Chart rows run from the highest hand at the top to the lowest at the bottom (A,A first for pairs). */
 export function chartSections(hideRedundant: boolean): ChartSection[] {
   return [
-    { id: 'hard', caption: 'Hard totals', rows: (hideRedundant ? HARD_ROWS : ALL_HARD_ROWS).map((n) => rowKey('hard', n)).reverse() },
-    { id: 'soft', caption: 'Soft totals', rows: (hideRedundant ? SOFT_ROWS : ALL_SOFT_ROWS).map((n) => rowKey('soft', n)).reverse() },
+    { id: 'hard', caption: 'Hard Totals', rows: (hideRedundant ? HARD_ROWS : ALL_HARD_ROWS).map((n) => rowKey('hard', n)).reverse() },
+    { id: 'soft', caption: 'Soft Totals', rows: (hideRedundant ? SOFT_ROWS : ALL_SOFT_ROWS).map((n) => rowKey('soft', n)).reverse() },
     { id: 'pair', caption: 'Pairs', rows: PAIR_ROWS.map((n) => rowKey('pair', n)).reverse() },
   ];
 }
@@ -98,11 +98,29 @@ export default function StrategyChart() {
   const [statsVersion, setStatsVersion] = useState(0);
   const render = useCellRenderer(table, prefs.chartView, statsVersion);
   const sections = chartSections(!prefs.showRepeatedRows);
-  const resetSection = (s: ChartSection) => {
-    if (!table || !window.confirm(`Reset your ${s.caption.toLowerCase()} history?`)) return;
-    resetCellStats(strategyKey(table.rules), s.rows);
+  // Two-step confirmation: step 1 asks, step 2 asks again before anything is deleted.
+  const [resetting, setResetting] = useState<{ sec: ChartSection; step: 1 | 2 } | null>(null);
+  const doReset = () => {
+    if (table && resetting) resetCellStats(strategyKey(table.rules), resetting.sec.rows);
     setStatsVersion((v) => v + 1);
+    setResetting(null);
   };
+  const legend =
+    prefs.chartView === 'margin' ? (
+      <div className="scale-bar">
+        <span>Close call</span>
+        <span className="ramp" style={{ background: `linear-gradient(90deg, ${BLUE_RAMP.join(',')})` }} />
+        <span>Big edge</span>
+      </div>
+    ) : prefs.chartView === 'weak' ? (
+      <div className="scale-bar">
+        <span>Always right</span>
+        <span className="ramp" style={{ background: `linear-gradient(90deg, ${ACCURACY_RAMP.join(',')})`, border: '1px solid var(--border)' }} />
+        <span>Often wrong</span>
+      </div>
+    ) : (
+      <ActionLegend />
+    );
   const cell = table && sel ? table.cells[sel] : null;
 
   return (
@@ -145,44 +163,53 @@ export default function StrategyChart() {
                 value={tab}
                 onChange={setTab}
                 options={[
-                  { value: 'hard', label: 'Hard totals' },
-                  { value: 'soft', label: 'Soft totals' },
+                  { value: 'hard', label: 'Hard Totals' },
+                  { value: 'soft', label: 'Soft Totals' },
                   { value: 'pair', label: 'Pairs' },
                 ]}
               />
+            </div>
+            <div className="chart-toolbar">
+              {legend}
+              {prefs.chartView === 'weak' && (
+                <div className="row tight no-print">
+                  {sections.map((s) => (
+                    <button key={s.id} className={`btn danger small chart-reset ${s.id === tab ? 'on' : ''}`} onClick={() => setResetting({ sec: s, step: 1 })}>
+                      Reset {s.caption} Progress
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="stack" style={{ gap: 18 }}>
               {sections.map((s) => (
                 <div key={s.id} className={`chart-sec ${s.id === tab ? 'on' : ''}`}>
                   <StrategyGrid caption={s.caption} rows={s.rows} cell={render} selected={sel} onCell={(row, up) => setSel(cellKey(row, up))} />
-                  {prefs.chartView === 'weak' && (
-                    <button className="btn ghost small no-print" style={{ marginTop: 6 }} onClick={() => resetSection(s)}>
-                      Reset {s.caption.toLowerCase()} history
-                    </button>
-                  )}
                 </div>
               ))}
-            </div>
-            <div style={{ marginTop: 16 }} className="stack">
-              {prefs.chartView === 'margin' ? (
-                <div className="scale-bar">
-                  <span>Close call</span>
-                  <span className="ramp" style={{ background: `linear-gradient(90deg, ${BLUE_RAMP.join(',')})` }} />
-                  <span>Big edge</span>
-                </div>
-              ) : prefs.chartView === 'weak' ? (
-                <div className="scale-bar">
-                  <span>Always right</span>
-                  <span className="ramp" style={{ background: `linear-gradient(90deg, ${ACCURACY_RAMP.join(',')})`, border: '1px solid var(--border)' }} />
-                  <span>Often wrong</span>
-                </div>
-              ) : (
-                <ActionLegend />
-              )}
             </div>
           </div>
           {cell && <ProofDrawer key={sel!} table={table} cell={cell} onClose={() => setSel(null)} />}
         </div>
+      )}
+      {resetting && (
+        <Modal
+          narrow
+          title={resetting.step === 1 ? `Reset ${resetting.sec.caption} Progress?` : 'Are you sure?'}
+          onClose={() => setResetting(null)}
+          footer={
+            <>
+              <button className="btn" onClick={() => setResetting(null)} autoFocus>
+                Cancel
+              </button>
+              <button className="btn danger solid" onClick={() => (resetting.step === 1 ? setResetting({ ...resetting, step: 2 }) : doReset())}>
+                {resetting.step === 1 ? 'Reset' : 'Yes, Reset'}
+              </button>
+            </>
+          }
+        >
+          <p>{resetting.step === 1 ? `All your ${resetting.sec.caption.toLowerCase()} results will be erased.` : 'This cannot be undone.'}</p>
+        </Modal>
       )}
     </main>
   );

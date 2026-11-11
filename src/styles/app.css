@@ -233,6 +233,10 @@ small, .small { font-size: 0.85rem; }
 .btn.primary:hover:not(:disabled) { background: #ffffff; border-color: #ffffff; }
 .btn.ghost { background: transparent; border-color: transparent; color: var(--text-2); }
 .btn.ghost:hover:not(:disabled) { background: var(--panel-2); color: var(--text); }
+.btn.danger { background: transparent; border-color: var(--bad); color: var(--bad-text); }
+.btn.danger:hover:not(:disabled) { background: rgba(208, 59, 59, 0.14); }
+.btn.danger.solid { background: var(--bad); border-color: var(--bad); color: #fff; }
+.btn.danger.solid:hover:not(:disabled) { background: #e04848; }
 .btn.small { padding: 5px 10px; font-size: 0.85rem; border-radius: 8px; }
 .btn.big { padding: 13px 22px; font-size: 1.05rem; border-radius: 12px; }
 .btn .kbd, .kbd { font-family: var(--mono); font-size: 0.72rem; padding: 1px 5px; border-radius: 4px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12); color: inherit; opacity: 0.85; }
@@ -326,6 +330,7 @@ table.sgrid td.cell .ev { display: block; font-size: 0.66rem; font-weight: 700; 
 .legend .item { display: inline-flex; align-items: center; gap: 6px; }
 .scale-bar { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--muted); }
 .scale-bar .ramp { width: 160px; height: 10px; border-radius: 4px; }
+.chart-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-bottom: 14px; }
 
 /* ---------- strategy layout with drawer ---------- */
 .chart-layout { display: grid; grid-template-columns: minmax(0, 1fr) 460px; gap: 18px; align-items: start; }
@@ -334,7 +339,7 @@ table.sgrid td.cell .ev { display: block; font-size: 0.66rem; font-weight: 700; 
 .chart-tabs .seg button { flex: 1; padding: 10px 6px; font-size: 0.95rem; }
 @media (max-width: 900px), (hover: none) and (pointer: coarse) {
   .chart-tabs { display: block; }
-  .chart-sec:not(.on) { display: none; }
+  .chart-sec:not(.on), .chart-reset:not(.on) { display: none; }
 }
 @media print { .chart-sec { display: block !important; } }
 .chart-layout.no-drawer { grid-template-columns: minmax(0, 1fr); }
