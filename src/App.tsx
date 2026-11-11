@@ -136,9 +136,6 @@ function TopNav() {
               </div>
             </div>
           ))}
-          <Link to="/math" className="nav-link">
-            The Math
-          </Link>
         </nav>
         <div className="topnav-right">
           {/* Phones and tablets get no dropdown menu: the home page lists every game and lesson as a button. */}
