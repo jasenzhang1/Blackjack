@@ -128,7 +128,6 @@ export default function Trainer() {
     save(FILTER_KEY, f);
   };
   const [decisionOnly, setDecisionOnly] = useState(false);
-  const [autoNext, setAutoNext] = useState(true);
   const [why, setWhy] = useState(false);
   const [optsOpen, setOptsOpen] = useState(false);
   const seed = useRef(randomSeed());
@@ -146,7 +145,7 @@ export default function Trainer() {
     rig,
     deviations: false,
     countChecks: { frequency: 'off', askTC: false },
-    autoNext,
+    autoNext: false,
     decisionOnly,
     countingSystem: prefs.countingSystem,
   };
@@ -342,9 +341,6 @@ export default function Trainer() {
             </div>
             <Check checked={decisionOnly} onChange={setDecisionOnly}>
               First decision only (fast)
-            </Check>
-            <Check checked={autoNext} onChange={setAutoNext}>
-              Auto-deal
             </Check>
           </div>
         </Modal>
