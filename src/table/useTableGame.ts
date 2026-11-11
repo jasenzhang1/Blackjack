@@ -113,7 +113,7 @@ export function useTableGame(setup: GameSetup, rules: Rules, strategy: StrategyT
   const makeTable = useCallback((): Table => {
     const s = setupRef.current;
     const rng = rngRef.current;
-    const t = new Table({ rules: rulesRef.current, seats: s.seats, rng, minBet: s.minBet, maxBet: s.maxBet });
+    const t = new Table({ rules: rulesRef.current, seats: s.seats, rng, minBet: s.minBet, maxBet: s.maxBet, replacement: s.mode === 'trainer' });
     t.botBrain = makeBotBrain(() => strategyRef.current, rng);
     const bots = makeBots(s.bots, rng, s.botStyles);
     const free = Array.from({ length: s.seats }, (_, i) => i).filter((i) => i !== s.humanSeat);

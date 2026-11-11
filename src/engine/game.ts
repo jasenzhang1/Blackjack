@@ -3,7 +3,7 @@
  * Count & Play and the Casino. Every automatic event (one card dealt, one bot decision, one dealer
  * draw) is a separate `step()` so the UI can animate at any speed and pause for the human.
  */
-import { buildShoe, type Card, type Rank } from './cards';
+import { FACES, SUITS, buildShoe, faceRank, type Card, type Rank } from './cards';
 import type { Action } from './ev';
 import { handValue, isBlackjack } from './hand';
 import { canDoubleTotal, tableDecks, type Rules } from './rules';
@@ -86,6 +86,8 @@ export interface TableOptions {
   rng: RNG;
   minBet?: number;
   maxBet?: number;
+  /** Draw every card with replacement from an infinite deck (no shoe, never depletes). */
+  replacement?: boolean;
 }
 
 const ranksOf = (cards: readonly Card[]): Rank[] => cards.map((c) => c.rank);
@@ -119,12 +121,15 @@ export class Table {
   maxBet: number;
   private dealQueue: ('up' | 'hole' | number)[] = [];
   private rigged: Rank[] = [];
+  readonly replacement: boolean;
+  private nextId = 1_000_000_000;
 
   constructor(opts: TableOptions) {
     this.rules = opts.rules;
     this.rng = opts.rng;
     this.minBet = opts.minBet ?? 10;
     this.maxBet = opts.maxBet ?? 1000;
+    this.replacement = opts.replacement ?? false;
     this.seats = Array.from({ length: opts.seats }, (_, i) => ({
       index: i,
       player: null,
@@ -171,7 +176,16 @@ export class Table {
     this.rigged = ranks.slice();
   }
 
+  /** A fresh card from an infinite deck, of the given rank if one is asked for. */
+  private freshCard(want?: Rank): Card {
+    const faces = want ? FACES.filter((f) => faceRank(f) === want) : FACES;
+    const face = faces[Math.floor(this.rng() * faces.length)];
+    const suit = SUITS[Math.floor(this.rng() * SUITS.length)];
+    return { id: this.nextId++, face, suit, rank: faceRank(face) };
+  }
+
   private draw(): Card {
+    if (this.replacement) return this.freshCard(this.rigged.shift());
     if (this.rigged.length) {
       const want = this.rigged.shift()!;
       // Take a *uniformly random* card of the wanted rank. (Taking the topmost one would bias the
@@ -655,6 +669,7 @@ export class Table {
     this.dealer = [];
     this.holeRevealed = false;
     this.phase = 'betting';
+    if (this.replacement) this.discards = [];
     const reshuffle = this.csm || this.shoe.length <= this.cutRemaining;
     if (reshuffle) this.newShoe();
     return reshuffle;
@@ -678,6 +693,7 @@ export class Table {
     this.holeRevealed = false;
     this.turn = null;
     this.phase = 'betting';
+    if (this.replacement) this.discards = [];
     if (this.csm || this.shoe.length <= this.cutRemaining) this.newShoe();
   }
 

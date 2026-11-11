@@ -83,24 +83,28 @@ export function TableView({ game, humanSeat, showDecks = false, label = 'Blackja
   return (
     <div className="felt" aria-label="Blackjack table">
       <div className="felt-top">
-        <div className="tray-box" title="Discard tray">
+        {t.replacement ? <div className="tray-box" /> : (
+          <div className="tray-box" title="Discard tray">
           <div className="tray">
             <div className="fill" style={{ height: `${Math.min(100, trayFrac * 100)}%` }} />
           </div>
           <span>Discards</span>
           {showDecks && <span className="num">{(t.discards.length / 52).toFixed(1)} decks</span>}
-        </div>
+          </div>
+        )}
         <div className="dealer">
           <span className="label">Dealer</span>
           {t.dealer.length ? <HandView cards={t.dealer} holeDown={holeDown} /> : <div className="pcard ghost" />}
         </div>
-        <div className="shoe-box" title="Shoe">
+        {t.replacement ? <div className="shoe-box" /> : (
+          <div className="shoe-box" title="Shoe">
           <div className="shoe">
             <div className="fill" style={{ width: `${shoeFrac * 100}%` }} />
           </div>
           <span>Shoe</span>
           {showDecks && <span className="num">{(game.cardsUnseen / 52).toFixed(1)} decks left</span>}
-        </div>
+          </div>
+        )}
       </div>
       {label && <div className="felt-text">{label}</div>}
       <div className="seats">

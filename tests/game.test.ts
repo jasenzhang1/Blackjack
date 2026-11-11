@@ -161,3 +161,22 @@ describe('simulation agrees with the exact engine', () => {
     expect(Math.abs(mean - ev)).toBeLessThan(4 * se);
   });
 });
+
+describe('draw with replacement (trainer)', () => {
+  it('rigged hands always deal as asked, however many rounds', () => {
+    const rules: Rules = { ...DEFAULT_RULES, decks: 1 };
+    const t = new Table({ rules, seats: 1, rng: mulberry32(7), replacement: true });
+    t.sit(0, human(1e9));
+    for (let i = 0; i < 2000; i++) {
+      t.placeBet(0, 10);
+      t.rig([1, 6, 1, 9]); // A,A vs 6: a single deck holds only four aces
+      t.startRound();
+      t.runUntilBlocked();
+      const ranks = t.seats[0].hands[0].cards.map((c) => c.rank);
+      expect(ranks).toEqual([1, 1]);
+      expect(t.dealer[0].rank).toBe(6);
+      t.abortRound();
+      expect(t.shoe.length).toBe(52);
+    }
+  });
+});
