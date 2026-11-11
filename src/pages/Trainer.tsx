@@ -232,13 +232,7 @@ export default function Trainer() {
   return (
     <main className="page trainer-page">
       <div className="trainer-head">
-<<<<<<< HEAD
         <h1>Table Trainer</h1>
-        <button className="btn small ghost" onClick={() => setOptsOpen(true)} title="Practice settings">
-          ⚙ {filterLabel}
-        </button>
-=======
-        <h1>Table trainer</h1>
         <div className="trainer-quick">
           <div className="seg" role="group" aria-label="Deal only these hands">
             <button aria-pressed={filter === 'all'} className={filter === 'all' ? 'on' : ''} onClick={() => setFilter('all')} title="Deal every kind of hand">
@@ -260,7 +254,6 @@ export default function Trainer() {
             ⚙ {QUICK.some((q) => q.value === filter) || filter === 'all' ? 'More' : filterLabel}
           </button>
         </div>
->>>>>>> e9b8da2b37de94d56a3d10bad24c7eac59ebe725
       </div>
 
       <div className="trainer-grid">
