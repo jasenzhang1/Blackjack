@@ -34,6 +34,18 @@ const LAUNCHER: { label: string; items: { to: string; label: string; sub: string
     ],
   },
   {
+    label: "Texas Hold'em",
+    items: [
+      { to: '/holdem', label: 'Training rooms', sub: 'Start here' },
+      { to: '/holdem/preflop', label: 'Preflop ranges', sub: 'Charts and drills' },
+      { to: '/holdem/pot-odds', label: 'Pot odds', sub: 'Outs and prices' },
+      { to: '/holdem/implied-odds', label: 'Implied odds', sub: 'Paying for the future' },
+      { to: '/holdem/semi-bluff', label: 'Semi-bluffs', sub: 'Betting your draws' },
+      { to: '/holdem/reading', label: 'Reading opponents', sub: 'Ranges and reads' },
+      { to: '/holdem/play', label: 'Play table', sub: 'Full hands with a coach' },
+    ],
+  },
+  {
     label: 'Explore',
     items: [
       { to: '/rules', label: 'Rules Lab', sub: 'House edge by rule' },
@@ -194,6 +206,34 @@ export default function Home() {
               </Link>
             </li>
           </ul>
+        </div>
+      </section>
+
+      <section className="holdem-banner">
+        <div>
+          <span className="chip gold">New</span>
+          <h2>Texas Hold'em training rooms</h2>
+          <p className="text-2">Preflop ranges, pot odds, implied odds, semi-bluffs and reading opponents, then full hands at a coached table.</p>
+        </div>
+        <div className="row">
+          <Link to="/holdem/preflop" className="btn">
+            Preflop
+          </Link>
+          <Link to="/holdem/pot-odds" className="btn">
+            Pot odds
+          </Link>
+          <Link to="/holdem/implied-odds" className="btn">
+            Implied odds
+          </Link>
+          <Link to="/holdem/semi-bluff" className="btn">
+            Semi-bluffs
+          </Link>
+          <Link to="/holdem/reading" className="btn">
+            Reading opponents
+          </Link>
+          <Link to="/holdem/play" className="btn primary">
+            Play table →
+          </Link>
         </div>
       </section>
 
