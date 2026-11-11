@@ -1,294 +1,215 @@
 import { PlayingCard } from '../components/PlayingCard';
-import { fmtMoney, fmtPct } from '../components/ui';
 import type { Card } from '../engine/cards';
 import { getTrainerStats, listQuizAttempts, listSessions, listDrills } from '../state/progress';
 import { useSettings } from '../state/settings';
 import { Link } from '../router';
-import { useStrategy } from '../worker/client';
 
-/** Every game and lesson, shown as buttons on the home page on phones and tablets. */
-const LAUNCHER: { label: string; items: { to: string; label: string; sub: string }[] }[] = [
-  {
-    label: 'Basic Strategy',
-    items: [
-      { to: '/strategy', label: 'Strategy Chart', sub: 'Every play, with proofs' },
-      { to: '/strategy/tricks', label: 'Memory Tricks', sub: 'Phrases for the chart' },
-      { to: '/strategy/quiz', label: 'Grid Quiz', sub: 'Fill in the chart' },
-      { to: '/strategy/trainer', label: 'Table Trainer', sub: 'Play hands, get graded' },
-    ],
-  },
-  {
-    label: 'Card Counting',
-    items: [
-      { to: '/counting/learn', label: 'Learn to Count', sub: 'Seven lessons' },
-      { to: '/counting/drills', label: 'Drills', sub: 'Tags, counts, conversion' },
-      { to: '/counting/watch', label: 'Watch & Count', sub: 'Count simulated players' },
-      { to: '/counting/play', label: 'Count & Play', sub: 'Play while counting' },
-    ],
-  },
-  {
-    label: 'Play',
-    items: [
-      { to: '/play', label: 'Casino', sub: 'Bankroll with a coach' },
-      { to: '/reports', label: 'Report Cards', sub: 'Past sessions' },
-    ],
-  },
-  {
-    label: "Texas Hold'em",
-    items: [
-      { to: '/holdem', label: 'Training rooms', sub: 'Start here' },
-      { to: '/holdem/preflop', label: 'Preflop ranges', sub: 'Charts and drills' },
-      { to: '/holdem/pot-odds', label: 'Pot odds', sub: 'Outs and prices' },
-      { to: '/holdem/implied-odds', label: 'Implied odds', sub: 'Paying for the future' },
-      { to: '/holdem/semi-bluff', label: 'Semi-bluffs', sub: 'Betting your draws' },
-      { to: '/holdem/reading', label: 'Reading opponents', sub: 'Ranges and reads' },
-      { to: '/holdem/play', label: 'Play table', sub: 'Full hands with a coach' },
-    ],
-  },
-  {
-    label: 'Explore',
-    items: [
-      { to: '/rules', label: 'Rules Lab', sub: 'House edge by rule' },
-      { to: '/math', label: 'The Math', sub: 'All the proofs' },
-    ],
-  },
-];
+type Item = { to: string; label: string; sub: string };
+type Group = { label: string; items: Item[] };
+type Game = { name: string; icon: string; groups: Group[] };
+
+/**
+ * Every game and lesson, grouped by game. Phones and tablets show these as buttons; desktop shows
+ * each group as a track card.
+ */
+const BLACKJACK: Game = {
+  name: 'Blackjack',
+  icon: '♠',
+  groups: [
+    {
+      label: 'Basic Strategy',
+      items: [
+        { to: '/strategy', label: 'Strategy Chart', sub: 'Every play, with proofs' },
+        { to: '/strategy/tricks', label: 'Memory Tricks', sub: 'Phrases for the chart' },
+        { to: '/strategy/quiz', label: 'Grid Quiz', sub: 'Fill in the chart' },
+        { to: '/strategy/trainer', label: 'Table Trainer', sub: 'Play hands, get graded' },
+      ],
+    },
+    {
+      label: 'Card Counting',
+      items: [
+        { to: '/counting/learn', label: 'Learn to Count', sub: 'Seven lessons' },
+        { to: '/counting/drills', label: 'Drills', sub: 'Tags, counts, conversion' },
+        { to: '/counting/watch', label: 'Watch & Count', sub: 'Count simulated players' },
+        { to: '/counting/play', label: 'Count & Play', sub: 'Play while counting' },
+      ],
+    },
+    {
+      label: 'Play',
+      items: [
+        { to: '/play', label: 'Casino', sub: 'Bankroll with a coach' },
+        { to: '/reports', label: 'Report Cards', sub: 'Past sessions' },
+        { to: '/rules', label: 'Rules Lab', sub: 'House edge by rule' },
+        { to: '/math', label: 'The Math', sub: 'All the proofs' },
+      ],
+    },
+  ],
+};
+
+const HOLDEM: Game = {
+  name: "Texas Hold'em",
+  icon: '♣',
+  groups: [
+    {
+      label: 'Learn',
+      items: [
+        { to: '/holdem', label: 'Training Rooms', sub: 'Start here' },
+        { to: '/holdem/preflop', label: 'Preflop Ranges', sub: 'Charts and drills' },
+        { to: '/holdem/pot-odds', label: 'Pot Odds', sub: 'Outs and prices' },
+        { to: '/holdem/implied-odds', label: 'Implied Odds', sub: 'Paying for the future' },
+        { to: '/holdem/semi-bluff', label: 'Semi-Bluffs', sub: 'Betting your draws' },
+        { to: '/holdem/reading', label: 'Reading Opponents', sub: 'Ranges and reads' },
+      ],
+    },
+    {
+      label: 'Play',
+      items: [{ to: '/holdem/play', label: 'Play Table', sub: 'Full hands with a coach' }],
+    },
+  ],
+};
 
 const HERO: Card[] = [
   { id: 1, face: 'A', suit: 'S', rank: 1 },
   { id: 2, face: 'K', suit: 'H', rank: 10 },
 ];
 
+function GameHead({ game }: { game: Game }) {
+  return (
+    <div className="game-head">
+      <span className="game-icon" aria-hidden>
+        {game.icon}
+      </span>
+      <h2>{game.name}</h2>
+    </div>
+  );
+}
+
+/** Phone and tablet layout: one block of big buttons per game. */
+function Launcher({ game, extra }: { game: Game; extra?: React.ReactNode }) {
+  return (
+    <div className="game-section">
+      <GameHead game={game} />
+      {game.groups.map((g, gi) => (
+        <div key={g.label} className="launcher-group">
+          <h3>{g.label}</h3>
+          <div className="launcher-grid">
+            {g.items.map((i) => (
+              <Link key={i.to} to={i.to} className="launch-btn">
+                {i.label}
+                <span className="sub">{i.sub}</span>
+              </Link>
+            ))}
+            {gi === game.groups.length - 1 && extra}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Desktop layout: one numbered track card per group. */
+function Track({ game }: { game: Game }) {
+  return (
+    <section className="track">
+      {game.groups.map((g, gi) => (
+        <div key={g.label} className="track-card">
+          <div className="row">
+            <span className="step">{gi + 1}</span>
+            <h3 style={{ margin: 0 }}>{g.label}</h3>
+          </div>
+          <ul>
+            {g.items.map((i) => (
+              <li key={i.to}>
+                <Link to={i.to}>{i.label}</Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+function Stat({ k, v }: { k: string; v: string }) {
+  return (
+    <div>
+      <div className="muted small">{k}</div>
+      <strong className="num" style={{ fontSize: 20 }}>
+        {v}
+      </strong>
+    </div>
+  );
+}
+
 export default function Home() {
-  const { rules, prefs, openRules } = useSettings();
-  const { table } = useStrategy(rules);
+  const { openRules } = useSettings();
   const quiz = listQuizAttempts();
   const bestQuiz = quiz.reduce((m, q) => Math.max(m, q.correct / q.total), 0);
   const trainer = getTrainerStats();
   const sessions = listSessions();
   const drills = listDrills();
 
-  const handsPerHour = 80;
-  const hourly = table ? table.houseEdge * prefs.unit * handsPerHour : null;
-  const sixFiveCost = table ? table.pPlayerBJWin * 0.3 : null;
-
   return (
     <main className="page">
       <section className="launcher">
-        <h1>
-          Learn the <em>math</em>. Master the <em>count</em>.
-        </h1>
-        {LAUNCHER.map((g) => (
-          <div key={g.label} className="launcher-group">
-            <h2>{g.label}</h2>
-            <div className="launcher-grid">
-              {g.items.map((i) => (
-                <Link key={i.to} to={i.to} className="launch-btn">
-                  {i.label}
-                  <span className="sub">{i.sub}</span>
-                </Link>
-              ))}
-              {g.label === 'Explore' && (
-                <button className="launch-btn" onClick={openRules}>
-                  Table rules
-                  <span className="sub">Set your table's rules</span>
-                </button>
-              )}
+        <Launcher
+          game={BLACKJACK}
+          extra={
+            <button className="launch-btn" onClick={openRules}>
+              Table Rules
+              <span className="sub">Set your table's rules</span>
+            </button>
+          }
+        />
+        <Launcher game={HOLDEM} />
+      </section>
+
+      <div className="game-section desk-only">
+        <GameHead game={BLACKJACK} />
+        <section className="hero">
+          <div>
+            <h1>
+              Learn the <em>math</em>.<br />
+              Master the <em>count</em>.
+            </h1>
+            <p className="lead">A basic-strategy and card-counting trainer with an exact EV proof for every play.</p>
+            <div className="row" style={{ marginTop: 18 }}>
+              <Link to="/strategy" className="btn primary big">
+                Open the Strategy Chart
+              </Link>
+              <Link to="/counting/learn" className="btn big">
+                Learn to Count
+              </Link>
+              <button className="btn ghost" onClick={openRules}>
+                Set your table's rules
+              </button>
             </div>
           </div>
-        ))}
-      </section>
+          <div className="hero-cards" aria-hidden>
+            {HERO.map((c) => (
+              <PlayingCard key={c.id} card={c} />
+            ))}
+          </div>
+        </section>
 
-      <section className="hero">
-        <div>
-          <h1>
-            Learn the <em>math</em>.<br />
-            Master the <em>count</em>.
-          </h1>
-          <p className="lead">
-            A basic-strategy and card-counting trainer with an exact EV proof for every play.
-          </p>
-          <div className="row" style={{ marginTop: 18 }}>
-            <Link to="/strategy" className="btn primary big">
-              Open the strategy chart
-            </Link>
-            <Link to="/counting/learn" className="btn big">
-              Learn to Count
-            </Link>
-            <button className="btn ghost" onClick={openRules}>
-              Set your table's rules
-            </button>
+        <Track game={BLACKJACK} />
+
+        <div className="panel home-stats" style={{ marginTop: 16 }}>
+          <h3>Your Progress</h3>
+          <div className="row" style={{ gap: 28 }}>
+            <Stat k="Best grid quiz" v={quiz.length ? `${Math.round(bestQuiz * 100)}%` : '—'} />
+            <Stat k="Trainer decisions" v={trainer.total ? `${trainer.correct}/${trainer.total}` : '—'} />
+            <Stat k="Best trainer streak" v={trainer.bestStreak ? String(trainer.bestStreak) : '—'} />
+            <Stat k="Drills completed" v={drills.length ? String(drills.length) : '—'} />
+            <Stat k="Sessions played" v={sessions.length ? String(sessions.length) : '—'} />
           </div>
         </div>
-        <div className="hero-cards" aria-hidden>
-          {HERO.map((c) => (
-            <PlayingCard key={c.id} card={c} />
-          ))}
-        </div>
-      </section>
+      </div>
 
-      <section className="track">
-        <div className="track-card">
-          <div className="row">
-            <span className="step">1</span>
-            <h2 style={{ margin: 0 }}>Basic Strategy</h2>
-          </div>
-          <ul>
-            <li>
-              <Link to="/strategy">
-                Interactive Chart
-              </Link>
-            </li>
-            <li>
-              <Link to="/strategy/tricks">
-                Memory Tricks
-              </Link>
-            </li>
-            <li>
-              <Link to="/strategy/quiz">
-                Grid Quiz
-              </Link>
-            </li>
-            <li>
-              <Link to="/strategy/trainer">
-                Table Trainer
-              </Link>
-            </li>
-          </ul>
-        </div>
-        <div className="track-card">
-          <div className="row">
-            <span className="step">2</span>
-            <h2 style={{ margin: 0 }}>Card Counting</h2>
-          </div>
-          <ul>
-            <li>
-              <Link to="/counting/learn">
-                Lessons
-              </Link>
-            </li>
-            <li>
-              <Link to="/counting/drills">
-                Drills
-              </Link>
-            </li>
-            <li>
-              <Link to="/counting/watch">
-                Watch & Count
-              </Link>
-            </li>
-            <li>
-              <Link to="/counting/play">
-                Count & Play
-              </Link>
-            </li>
-          </ul>
-        </div>
-        <div className="track-card">
-          <div className="row">
-            <span className="step">3</span>
-            <h2 style={{ margin: 0 }}>Play</h2>
-          </div>
-          <ul>
-            <li>
-              <Link to="/play">
-                Casino
-              </Link>
-            </li>
-            <li>
-              <Link to="/reports">
-                Report Cards
-              </Link>
-            </li>
-            <li>
-              <Link to="/rules">
-                Rules Lab
-              </Link>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <section className="holdem-banner">
-        <div>
-          <span className="chip gold">New</span>
-          <h2>Texas Hold'em training rooms</h2>
-          <p className="text-2">Preflop ranges, pot odds, implied odds, semi-bluffs and reading opponents, then full hands at a coached table.</p>
-        </div>
-        <div className="row">
-          <Link to="/holdem/preflop" className="btn">
-            Preflop
-          </Link>
-          <Link to="/holdem/pot-odds" className="btn">
-            Pot odds
-          </Link>
-          <Link to="/holdem/implied-odds" className="btn">
-            Implied odds
-          </Link>
-          <Link to="/holdem/semi-bluff" className="btn">
-            Semi-bluffs
-          </Link>
-          <Link to="/holdem/reading" className="btn">
-            Reading opponents
-          </Link>
-          <Link to="/holdem/play" className="btn primary">
-            Play table →
-          </Link>
-        </div>
-      </section>
-
-      <section className="grid-3" style={{ marginTop: 22 }}>
-        <div className="panel">
-          <h3>Your progress</h3>
-          <table className="data">
-            <tbody>
-              <tr>
-                <td>Best grid quiz</td>
-                <td className="num">{quiz.length ? `${Math.round(bestQuiz * 100)}%` : '—'}</td>
-              </tr>
-              <tr>
-                <td>Trainer decisions</td>
-                <td className="num">{trainer.total ? `${trainer.correct}/${trainer.total}` : '—'}</td>
-              </tr>
-              <tr>
-                <td>Best trainer streak</td>
-                <td className="num">{trainer.bestStreak || '—'}</td>
-              </tr>
-              <tr>
-                <td>Drills completed</td>
-                <td className="num">{drills.length || '—'}</td>
-              </tr>
-              <tr>
-                <td>Sessions played</td>
-                <td className="num">{sessions.length || '—'}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div className="panel">
-          <h3>Your table, in numbers</h3>
-          {table ? (
-            <>
-              <p className="text-2">
-                With perfect basic strategy the casino keeps <strong>{fmtPct(table.houseEdge, 2)}</strong> of every bet. At {fmtMoney(prefs.unit)} a hand and about {handsPerHour} hands an hour, that
-                is about <strong>{fmtMoney(hourly!)}</strong> an hour.
-              </p>
-              <p className="text-2">
-                If blackjack paid 6:5 instead of 3:2, you would give up another <strong>{fmtPct(sixFiveCost!, 2)}</strong>, roughly {fmtMoney(sixFiveCost! * prefs.unit * handsPerHour)} an hour.
-              </p>
-            </>
-          ) : (
-            <p className="muted">Computing…</p>
-          )}
-        </div>
-        <div className="panel">
-          <h3>How it works</h3>
-          <p className="text-2">
-            A combinatorial engine in your browser solves every play with exact card removal.
-          </p>
-          <Link to="/math">Read the proofs →</Link>
-        </div>
-      </section>
+      <div className="game-section holdem desk-only">
+        <GameHead game={HOLDEM} />
+        <Track game={HOLDEM} />
+      </div>
     </main>
   );
 }

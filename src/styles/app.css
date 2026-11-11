@@ -87,6 +87,10 @@ small, .small { font-size: 0.85rem; }
 .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
 .page-head p { margin: 0; color: var(--text-2); max-width: 760px; }
 .footer { border-top: 1px solid var(--border); color: var(--muted); font-size: 0.85rem; padding: 18px 20px; text-align: center; }
+.footer-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px 22px; }
+.footer-links a { color: var(--muted); }
+.footer-links a:hover, .footer-links a.active { color: var(--text); }
+.narrow-page { max-width: 760px; }
 
 /* ---------- top navigation ---------- */
 .topnav {
@@ -532,7 +536,7 @@ details.acc > .acc-body { padding: 0 0 12px; }
 .launcher h1 { font-size: 1.6rem; margin-bottom: 4px; }
 .launcher h1 em { font-style: normal; color: var(--gold-2); }
 .launcher-group { margin-top: 18px; }
-.launcher-group h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 8px; }
+.launcher-group h3 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 8px; }
 .launcher-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
 .launch-btn {
   display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; min-height: 64px;
@@ -541,9 +545,20 @@ details.acc > .acc-body { padding: 0 0 12px; }
 }
 .launch-btn:hover, .launch-btn:active { border-color: var(--gold); background: var(--panel-2); text-decoration: none; }
 .launch-btn .sub { font-size: 0.8rem; font-weight: 500; color: var(--muted); }
+/* Home page: one clearly separated section per game. */
+.game-section { margin-top: 34px; padding: 22px; border-radius: 20px; border: 1px solid var(--border-2); background: linear-gradient(160deg, rgba(15, 74, 49, 0.35), transparent 60%); }
+.game-section:first-child { margin-top: 18px; }
+.game-section.holdem { background: linear-gradient(160deg, rgba(120, 40, 40, 0.3), transparent 60%); }
+.game-head { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; margin-bottom: 4px; border-bottom: 1px solid var(--border-2); }
+.game-head h2 { margin: 0; font-size: 1.7rem; }
+.game-icon { font-size: 1.6rem; color: var(--gold); line-height: 1; }
+.game-section .hero { padding-top: 14px; }
+.launcher .game-section { padding: 16px; }
+.launcher .game-section + .game-section { margin-top: 22px; }
+.launcher .game-section:nth-child(2) { background: linear-gradient(160deg, rgba(120, 40, 40, 0.3), transparent 60%); }
 @media (max-width: 900px), (hover: none) and (pointer: coarse) {
   .launcher { display: block; }
-  .hero, section.track { display: none; }
+  .hero, section.track, .desk-only { display: none; }
 }
 .track-card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
 .track-card .step { width: 32px; height: 32px; border-radius: 50%; background: var(--felt-2); color: var(--gold); display: grid; place-items: center; font-weight: 800; box-shadow: inset 0 0 0 1px #2d6b4c; }
@@ -627,10 +642,6 @@ details.acc > .acc-body { padding: 0 0 12px; }
 }
 
 /* ---------- Texas Hold'em training rooms ---------- */
-.holdem-banner { margin-top: 22px; display: flex; justify-content: space-between; align-items: center; gap: 18px; flex-wrap: wrap; padding: 20px; border-radius: 16px; border: 1px solid var(--border-2); background: linear-gradient(120deg, #172a21, #1d1a10); }
-.holdem-banner h2 { margin: 8px 0 4px; }
-.holdem-banner p { margin: 0; }
-@media (max-width: 900px), (hover: none) and (pointer: coarse) { .holdem-banner { display: none; } }
 
 .holdem-hero { padding-top: 18px; }
 .holdem-hero .hero-cards .pcard + .pcard { margin-left: -46px; }

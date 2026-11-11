@@ -18,6 +18,8 @@ const Casino = lazy(() => import('./pages/Casino'));
 const Reports = lazy(() => import('./pages/Reports'));
 const RulesLab = lazy(() => import('./pages/RulesLab'));
 const MathPage = lazy(() => import('./pages/MathPage'));
+const About = lazy(() => import('./pages/About'));
+const Contact = lazy(() => import('./pages/Contact'));
 const HoldemLobby = lazy(() => import('./pages/holdem/Lobby'));
 const PotOdds = lazy(() => import('./pages/holdem/PotOdds'));
 const ImpliedOdds = lazy(() => import('./pages/holdem/ImpliedOdds'));
@@ -40,6 +42,8 @@ const ROUTES: Record<string, React.ComponentType> = {
   '/reports': Reports,
   '/rules': RulesLab,
   '/math': MathPage,
+  '/about': About,
+  '/contact': Contact,
   '/holdem': HoldemLobby,
   '/holdem/pot-odds': PotOdds,
   '/holdem/implied-odds': ImpliedOdds,
@@ -166,6 +170,14 @@ export default function App() {
       <Suspense fallback={<div className="page muted">Loading…</div>}>
         <Page key={`${path}#${syncTick}`} />
       </Suspense>
+      <footer className="footer no-print">
+        <nav className="footer-links" aria-label="Site">
+          <Link to="/about">About</Link>
+          <Link to="/rules">House Edge</Link>
+          <Link to="/math">The Math</Link>
+          <Link to="/contact">Contact</Link>
+        </nav>
+      </footer>
       {rulesDialogOpen && <RulesDialog />}
       <GuestReminder />
     </div>
