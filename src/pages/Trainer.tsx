@@ -34,6 +34,14 @@ const QUICK: { value: Filter; label: string }[] = [
   { value: 'pair', label: 'Pairs' },
 ];
 const FILTER_KEY = 'trainer.filter';
+const AUTO_KEY = 'trainer.autoDeal';
+
+type AutoDeal = 'never' | 'right' | 'always';
+const AUTO_DEAL: { value: AutoDeal; label: string }[] = [
+  { value: 'never', label: 'Never' },
+  { value: 'right', label: 'When right' },
+  { value: 'always', label: 'Always' },
+];
 const isFilter = (v: unknown): v is Filter => FILTERS.some((f) => f.value === v);
 
 interface Candidate {
@@ -128,6 +136,14 @@ export default function Trainer() {
     save(FILTER_KEY, f);
   };
   const [decisionOnly, setDecisionOnly] = useState(false);
+  const [autoDeal, setAutoDealState] = useState<AutoDeal>(() => {
+    const v = load<unknown>(AUTO_KEY, 'never');
+    return v === 'right' || v === 'always' ? v : 'never';
+  });
+  const setAutoDeal = (v: AutoDeal) => {
+    setAutoDealState(v);
+    save(AUTO_KEY, v);
+  };
   const [why, setWhy] = useState(false);
   const [optsOpen, setOptsOpen] = useState(false);
   const seed = useRef(randomSeed());
@@ -145,7 +161,8 @@ export default function Trainer() {
     rig,
     deviations: false,
     countChecks: { frequency: 'off', askTC: false },
-    autoNext: false,
+    autoNext: autoDeal !== 'never',
+    holdOnMistake: autoDeal !== 'always',
     decisionOnly,
     countingSystem: prefs.countingSystem,
   };
@@ -338,6 +355,10 @@ export default function Trainer() {
             <div className="field">
               Deal me
               <Seg value={filter} onChange={setFilter} options={FILTERS} label="Hand filter" />
+            </div>
+            <div className="field">
+              Auto-deal next hand
+              <Seg value={autoDeal} onChange={setAutoDeal} options={AUTO_DEAL} label="Auto-deal" />
             </div>
             <Check checked={decisionOnly} onChange={setDecisionOnly}>
               First decision only (fast)

@@ -41,6 +41,8 @@ export interface GameSetup {
   countChecks: CountCheckSetup;
   /** Automatically deal the next round (watch mode / trainer auto-advance). */
   autoNext: boolean;
+  /** With autoNext: stop and wait after a wrong play (default true). */
+  holdOnMistake?: boolean;
   /** Trainer: grade only the first decision of each hand, then deal the next one. */
   decisionOnly?: boolean;
   /** Ask the worker for exact EVs of the actual shoe at each human decision. */
@@ -301,9 +303,10 @@ export function useTableGame(setup: GameSetup, rules: Rules, strategy: StrategyT
       const hand = t.seats[p.seat].hands[p.hand];
       const g = evaluate(a);
       if (g) record('play', hand.cards.map((c) => c.rank), t.upcard!.rank, g, meta, hand.bet / (hand.doubled ? 2 : 1));
-      if (g && !g.ok && setupRef.current.mode === 'trainer') holdNext.current = true;
+      const hold = setupRef.current.holdOnMistake !== false;
+      if (g && !g.ok && hold && setupRef.current.mode === 'trainer') holdNext.current = true;
       if (setupRef.current.decisionOnly && g) {
-        holdNext.current = !g.ok;
+        holdNext.current = hold && !g.ok;
         t.abortRound();
         roundClosed.current = true;
         bump();
