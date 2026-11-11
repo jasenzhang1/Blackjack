@@ -1,7 +1,7 @@
 /** Hold'em training-room stats, saved under one localStorage key (and synced to the account). */
 import { load, save } from '../state/storage';
 
-export type RoomId = 'potodds' | 'implied' | 'semibluff' | 'reading';
+export type RoomId = 'preflop' | 'potodds' | 'implied' | 'semibluff' | 'reading' | 'play';
 
 export interface RoomStats {
   /** Spots played to the final decision. */
@@ -55,4 +55,15 @@ export function mergeHoldem(a: HoldemStats = {}, b: HoldemStats = {}): HoldemSta
     out[k] = { ...base, bestStreak: Math.max(x?.bestStreak ?? 0, y?.bestStreak ?? 0) };
   }
   return out;
+}
+
+/** Best score (share of combos right) for each range-painting chart. */
+export function paintScores(): Record<string, number> {
+  return load<Record<string, number>>('holdemPaint', {});
+}
+
+export function savePaintScore(chartId: string, score: number): void {
+  const all = paintScores();
+  all[chartId] = Math.max(all[chartId] ?? 0, score);
+  save('holdemPaint', all);
 }

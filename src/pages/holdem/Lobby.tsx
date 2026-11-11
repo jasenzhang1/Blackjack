@@ -6,6 +6,13 @@ import { Link } from '../../router';
 
 const ROOMS: { id: RoomId; to: string; title: string; tag: string; learn: string[] }[] = [
   {
+    id: 'preflop',
+    to: '/holdem/preflop',
+    title: 'Preflop ranges',
+    tag: 'Before the flop',
+    learn: ['Opening ranges by seat', 'Defending against a raise', 'Facing tight and light 3-bets', 'Paint ranges from memory'],
+  },
+  {
     id: 'potodds',
     to: '/holdem/pot-odds',
     title: 'Pot odds',
@@ -47,7 +54,7 @@ export default function HoldemLobby() {
             Hold'em <em>training rooms</em>
           </h1>
           <p className="lead">
-            Practise the betting maths strong players use without thinking: pot odds, implied odds and semi-bluffs, plus reading the player across the table. Every spot is dealt at random, and every
+            Practise the decisions strong players make without thinking: preflop ranges, pot odds, implied odds and semi-bluffs, plus reading the player across the table. Every spot is dealt at random, and every
             answer is checked against equities computed exactly over every runout and every hand in the opponent's range.
           </p>
         </div>
@@ -88,6 +95,17 @@ export default function HoldemLobby() {
           );
         })}
       </section>
+
+      <Link to="/holdem/play" className="play-banner">
+        <div>
+          <span className="chip gold">Put it together</span>
+          <h2>Play table</h2>
+          <p className="text-2">
+            Full hands at a six-max table against five bot players of different types. A coach tracks your opponent's range from their actions, values every option and grades you on a report card.
+          </p>
+        </div>
+        <span className="btn primary big">Sit down →</span>
+      </Link>
 
       <section className="grid-2" style={{ marginTop: 22 }}>
         <div className="panel">

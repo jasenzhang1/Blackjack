@@ -22,6 +22,8 @@ const PotOdds = lazy(() => import('./pages/holdem/PotOdds'));
 const ImpliedOdds = lazy(() => import('./pages/holdem/ImpliedOdds'));
 const SemiBluff = lazy(() => import('./pages/holdem/SemiBluff'));
 const Reading = lazy(() => import('./pages/holdem/Reading'));
+const Preflop = lazy(() => import('./pages/holdem/Preflop'));
+const PlayTable = lazy(() => import('./pages/holdem/Play'));
 
 const ROUTES: Record<string, React.ComponentType> = {
   '/': Home,
@@ -41,6 +43,8 @@ const ROUTES: Record<string, React.ComponentType> = {
   '/holdem/implied-odds': ImpliedOdds,
   '/holdem/semi-bluff': SemiBluff,
   '/holdem/reading': Reading,
+  '/holdem/preflop': Preflop,
+  '/holdem/play': PlayTable,
 };
 
 const GROUPS: { label: string; prefix: string; items: { to: string; label: string }[] }[] = [
@@ -76,10 +80,12 @@ const GROUPS: { label: string; prefix: string; items: { to: string; label: strin
     prefix: '/holdem',
     items: [
       { to: '/holdem', label: 'Training rooms' },
+      { to: '/holdem/preflop', label: 'Preflop ranges' },
       { to: '/holdem/pot-odds', label: 'Pot odds' },
       { to: '/holdem/implied-odds', label: 'Implied odds' },
       { to: '/holdem/semi-bluff', label: 'Semi-bluffs' },
       { to: '/holdem/reading', label: 'Reading opponents' },
+      { to: '/holdem/play', label: 'Play table' },
     ],
   },
 ];
