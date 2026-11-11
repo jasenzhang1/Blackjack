@@ -17,6 +17,7 @@ const CountPlay = lazy(() => import('./pages/CountPlay'));
 const Casino = lazy(() => import('./pages/Casino'));
 const Reports = lazy(() => import('./pages/Reports'));
 const RulesLab = lazy(() => import('./pages/RulesLab'));
+const HouseEdge = lazy(() => import('./pages/HouseEdge'));
 const MathPage = lazy(() => import('./pages/MathPage'));
 const About = lazy(() => import('./pages/About'));
 const Contact = lazy(() => import('./pages/Contact'));
@@ -41,6 +42,7 @@ const ROUTES: Record<string, React.ComponentType> = {
   '/play': Casino,
   '/reports': Reports,
   '/rules': RulesLab,
+  '/house-edge': HouseEdge,
   '/math': MathPage,
   '/about': About,
   '/contact': Contact,
@@ -173,7 +175,7 @@ export default function App() {
       <footer className="footer no-print">
         <nav className="footer-links" aria-label="Site">
           <Link to="/about">About</Link>
-          <Link to="/rules">House Edge</Link>
+          <Link to="/house-edge">House Edge</Link>
           <Link to="/math">The Math</Link>
           <Link to="/contact">Contact</Link>
         </nav>

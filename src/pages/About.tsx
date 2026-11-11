@@ -15,7 +15,7 @@ export default function About() {
           <Link to="/math" className="btn small">
             Read the proofs →
           </Link>
-          <Link to="/rules" className="btn small">
+          <Link to="/house-edge" className="btn small">
             See your house edge →
           </Link>
         </div>
