@@ -20,6 +20,7 @@ const BLACKJACK: Game = {
       label: 'Basic Strategy',
       items: [
         { to: '/strategy', label: 'Strategy Chart', sub: 'Every play, with proofs' },
+        { to: '/strategy/mistakes', label: 'Mistake Chart', sub: 'What you get wrong' },
         { to: '/strategy/tricks', label: 'Memory Tricks', sub: 'Phrases for the chart' },
         { to: '/strategy/quiz', label: 'Grid Quiz', sub: 'Fill in the chart' },
         { to: '/strategy/trainer', label: 'Table Trainer', sub: 'Play hands, get graded' },

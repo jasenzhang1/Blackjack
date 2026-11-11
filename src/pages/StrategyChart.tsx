@@ -91,12 +91,17 @@ export function chartSections(hideRedundant: boolean): ChartSection[] {
 }
 
 export default function StrategyChart() {
+  return <ChartPage mistakes={false} />;
+}
+
+export function ChartPage({ mistakes }: { mistakes: boolean }) {
   const { rules, prefs, setPrefs } = useSettings();
+  const view: Prefs['chartView'] = mistakes ? 'weak' : prefs.chartView === 'weak' ? 'actions' : prefs.chartView;
   const { table, progress, error } = useStrategy(rules);
   const [sel, setSel] = useState<string | null>(null);
   const [tab, setTab] = useState<'hard' | 'soft' | 'pair'>('hard');
   const [statsVersion, setStatsVersion] = useState(0);
-  const render = useCellRenderer(table, prefs.chartView, statsVersion);
+  const render = useCellRenderer(table, view, statsVersion);
   const stats = useMemo(() => (table ? cellStats(strategyKey(table.rules)) : {}), [table, statsVersion]);
   const sections = chartSections(!prefs.showRepeatedRows);
   // Two-step confirmation: step 1 asks, step 2 asks again before anything is deleted.
@@ -107,13 +112,13 @@ export default function StrategyChart() {
     setResetting(null);
   };
   const legend =
-    prefs.chartView === 'margin' ? (
+    view === 'margin' ? (
       <div className="scale-bar">
         <span>Close call</span>
         <span className="ramp" style={{ background: `linear-gradient(90deg, ${BLUE_RAMP.join(',')})` }} />
         <span>Big edge</span>
       </div>
-    ) : prefs.chartView === 'weak' ? (
+    ) : view === 'weak' ? (
       <div className="scale-bar">
         <span>Always right</span>
         <span className="ramp" style={{ background: `linear-gradient(90deg, ${ACCURACY_RAMP.join(',')})`, border: '1px solid var(--border)' }} />
@@ -128,20 +133,21 @@ export default function StrategyChart() {
     <main className="page">
       <div className="page-head">
         <div>
-          <h1>Basic Strategy Chart</h1>
+          <h1>{mistakes ? 'Mistake Chart' : 'Basic Strategy Chart'}</h1>
         </div>
         <div className="row no-print">
-          <Seg
-            label="Chart view"
-            value={prefs.chartView}
+          {!mistakes && (
+            <Seg
+              label="Chart view"
+            value={view}
             onChange={(v) => setPrefs({ chartView: v })}
             options={[
               { value: 'actions', label: 'Plays' },
               { value: 'ev', label: 'Plays + EV' },
               { value: 'margin', label: 'What is at stake' },
-              { value: 'weak', label: 'My weak spots' },
             ]}
-          />
+            />
+          )}
           <button className="btn small" onClick={() => window.print()}>
             Print
           </button>
@@ -172,7 +178,7 @@ export default function StrategyChart() {
             </div>
             <div className="chart-toolbar">
               {legend}
-              {prefs.chartView === 'weak' && (
+              {view === 'weak' && (
                 <div className="row tight no-print">
                   {sections.map((s) => (
                     <button key={s.id} className={`btn danger small chart-reset ${s.id === tab ? 'on' : ''}`} onClick={() => setResetting({ sec: s, step: 1 })}>
@@ -190,7 +196,7 @@ export default function StrategyChart() {
               ))}
             </div>
           </div>
-          {cell && <ProofDrawer key={sel!} table={table} cell={cell} onClose={() => setSel(null)} stat={prefs.chartView === 'weak' ? stats[sel!] : undefined} />}
+          {cell && <ProofDrawer key={sel!} table={table} cell={cell} onClose={() => setSel(null)} stat={view === 'weak' ? stats[sel!] : undefined} />}
         </div>
       )}
       {resetting && (

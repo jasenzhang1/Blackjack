@@ -7,6 +7,7 @@ import { useSettings } from './state/settings';
 
 const Home = lazy(() => import('./pages/Home'));
 const StrategyChart = lazy(() => import('./pages/StrategyChart'));
+const MistakeChart = lazy(() => import('./pages/MistakeChart'));
 const GridQuiz = lazy(() => import('./pages/GridQuiz'));
 const Trainer = lazy(() => import('./pages/Trainer'));
 const MemoryTricksPage = lazy(() => import('./pages/MemoryTricksPage'));
@@ -32,6 +33,7 @@ const PlayTable = lazy(() => import('./pages/holdem/Play'));
 const ROUTES: Record<string, React.ComponentType> = {
   '/': Home,
   '/strategy': StrategyChart,
+  '/strategy/mistakes': MistakeChart,
   '/strategy/quiz': GridQuiz,
   '/strategy/trainer': Trainer,
   '/strategy/tricks': MemoryTricksPage,
@@ -61,6 +63,7 @@ const GROUPS: { label: string; prefix: string; items: { to: string; label: strin
     prefix: '/strategy',
     items: [
       { to: '/strategy', label: 'Strategy Chart' },
+      { to: '/strategy/mistakes', label: 'Mistake Chart' },
       { to: '/strategy/tricks', label: 'Memory Tricks' },
       { to: '/strategy/quiz', label: 'Grid Quiz' },
       { to: '/strategy/trainer', label: 'Table Trainer' },
