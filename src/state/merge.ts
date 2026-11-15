@@ -7,7 +7,7 @@ import type { SessionReport } from '../table/report';
 import type { CellStat, DrillResult, QuizAttempt, TrainerStats, WatchStats } from './progress';
 
 /** Keys synced to the account. Sessions are stored separately (one cloud document each). */
-export const SYNC_KEYS = ['rules', 'prefs', 'cells', 'quiz', 'trainer', 'drills', 'watch', 'holdem', 'holdemPaint', 'holdemSessions', 'sessions'] as const;
+export const SYNC_KEYS = ['rules', 'prefs', 'cells', 'quiz', 'trainer', 'drills', 'watch', 'holdem', 'holdemPaint', 'holdemSessions', 'holdemNuts', 'sessions'] as const;
 export type SyncKey = (typeof SYNC_KEYS)[number];
 export type Blob = Partial<Record<SyncKey, unknown>>;
 
@@ -69,6 +69,10 @@ export function mergeData(local: Blob, cloud: Blob): Blob {
     out.holdemSessions = unionBy(local.holdemSessions as { id: string; end: number }[], cloud.holdemSessions as { id: string; end: number }[], (r) => r.id, (x, y) => (y.end > x.end ? y : x))
       .sort((x, y) => x.end - y.end)
       .slice(-40);
+  if (local.holdemNuts || cloud.holdemNuts)
+    out.holdemNuts = unionBy(local.holdemNuts as { t: number }[], cloud.holdemNuts as { t: number }[], (r) => String(r.t))
+      .sort((x, y) => x.t - y.t)
+      .slice(-200);
   out.sessions = unionBy(local.sessions as SessionReport[], cloud.sessions as SessionReport[], (s) => s.id, (x, y) => (y.end > x.end ? y : x))
     .sort((x, y) => x.end - y.end)
     .slice(-60);

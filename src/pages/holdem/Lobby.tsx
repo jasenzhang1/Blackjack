@@ -40,6 +40,13 @@ const ROOMS: { id: RoomId; to: string; title: string; tag: string; learn: string
     tag: 'Ranges and reads',
     learn: ['Player types from HUD stats', 'Combo counting with blockers', 'What a bet means, and the exploit'],
   },
+  {
+    id: 'nuts',
+    to: '/holdem/nuts',
+    title: 'Board reading',
+    tag: 'Speed drill',
+    learn: ['Name the nuts and the cards that make it', 'List every straight on the board', 'Spot flushes, full houses and quads at a glance'],
+  },
 ];
 
 const HERO = parseCards('AhKh');

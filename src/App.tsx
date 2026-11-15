@@ -27,6 +27,7 @@ const PotOdds = lazy(() => import('./pages/holdem/PotOdds'));
 const ImpliedOdds = lazy(() => import('./pages/holdem/ImpliedOdds'));
 const SemiBluff = lazy(() => import('./pages/holdem/SemiBluff'));
 const Reading = lazy(() => import('./pages/holdem/Reading'));
+const BoardReading = lazy(() => import('./pages/holdem/Nuts'));
 const Preflop = lazy(() => import('./pages/holdem/Preflop'));
 const PlayTable = lazy(() => import('./pages/holdem/Play'));
 
@@ -53,6 +54,7 @@ const ROUTES: Record<string, React.ComponentType> = {
   '/holdem/implied-odds': ImpliedOdds,
   '/holdem/semi-bluff': SemiBluff,
   '/holdem/reading': Reading,
+  '/holdem/nuts': BoardReading,
   '/holdem/preflop': Preflop,
   '/holdem/play': PlayTable,
 };
@@ -97,6 +99,7 @@ const GROUPS: { label: string; prefix: string; items: { to: string; label: strin
       { to: '/holdem/implied-odds', label: 'Implied odds' },
       { to: '/holdem/semi-bluff', label: 'Semi-bluffs' },
       { to: '/holdem/reading', label: 'Reading opponents' },
+      { to: '/holdem/nuts', label: 'Board reading' },
       { to: '/holdem/play', label: 'Play table' },
     ],
   },

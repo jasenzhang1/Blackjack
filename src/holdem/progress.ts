@@ -1,7 +1,7 @@
 /** Hold'em training-room stats, saved under one localStorage key (and synced to the account). */
 import { load, save } from '../state/storage';
 
-export type RoomId = 'preflop' | 'potodds' | 'implied' | 'semibluff' | 'reading' | 'play';
+export type RoomId = 'preflop' | 'potodds' | 'implied' | 'semibluff' | 'reading' | 'nuts' | 'play';
 
 export interface RoomStats {
   /** Spots played to the final decision. */
@@ -66,4 +66,21 @@ export function savePaintScore(chartId: string, score: number): void {
   const all = paintScores();
   all[chartId] = Math.max(all[chartId] ?? 0, score);
   save('holdemPaint', all);
+}
+
+/** One board-reading answer sheet: when, how long it took, and whether every part was right. */
+export interface NutsTime {
+  t: number;
+  ms: number;
+  ok: boolean;
+}
+
+export function nutsTimes(): NutsTime[] {
+  return load<NutsTime[]>('holdemNuts', []);
+}
+
+export function saveNutsTime(ms: number, ok: boolean): NutsTime[] {
+  const all = [...nutsTimes(), { t: Date.now(), ms: Math.round(ms), ok }].slice(-200);
+  save('holdemNuts', all);
+  return all;
 }
