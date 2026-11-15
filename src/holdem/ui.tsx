@@ -361,7 +361,7 @@ export function Dealing() {
 }
 
 /** "Next spot" button with the N shortcut. */
-export function NextButton({ onNext }: { onNext: () => void }) {
+export function NextButton({ onNext, label = 'Next spot' }: { onNext: () => void; label?: string }) {
   useKeys(
     (k) => {
       if (k === 'n') onNext();
@@ -370,7 +370,7 @@ export function NextButton({ onNext }: { onNext: () => void }) {
   );
   return (
     <button className="btn primary big" onClick={onNext}>
-      Next spot <span className="kbd">N</span>
+      {label} <span className="kbd">N</span>
     </button>
   );
 }

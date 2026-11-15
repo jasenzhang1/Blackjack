@@ -849,3 +849,4 @@ details.acc > .acc-body { padding: 0 0 12px; }
   .read-board .pcard.lg { --cw: 58px; }
   .read-board .hand.spread .pcard + .pcard { margin-left: 4px; }
 }
+.read-street { color: rgba(255,255,255,0.8); font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.8rem; }

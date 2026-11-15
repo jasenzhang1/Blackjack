@@ -94,4 +94,25 @@ describe('board reading', () => {
       expect(r.straights.map((s) => s.high).sort((x, y) => x - y)).toEqual([...seen].sort((x, y) => x - y));
     }
   });
+
+  it('ranks flushes by the best flush card in the hand when the ace is on the board', () => {
+    const r = R('3s8d7dAd');
+    expect(r.nutName).toBe('A-K flush');
+    expect(r.nutText).toEqual(['K♦ + any diamond']);
+    expect(gradeNuts(r, 'KdXd').ok).toBe(true);
+    expect(gradeNuts(r, 'QdJd').ok).toBe(false);
+    const four = R('2h6h9hAhKc');
+    expect(four.nutName).toBe('A-K flush');
+    expect(four.nutText).toEqual(['K♥ + any card']);
+  });
+
+  it('reads one hand street by street', () => {
+    const board = parseCards('7h8h2cKh9h');
+    const [flop, turn, river] = [3, 4, 5].map((n) => readBoard(board.slice(0, n)));
+    expect(flop.possible.size).toBe(0);
+    expect(flop.nutName).toBe('Three eights');
+    expect(turn.possible.has(FLUSH)).toBe(true);
+    expect(river.possible.has(STRAIGHT_FLUSH)).toBe(true);
+    expect(river.nutText).toEqual(['J♥10♥']);
+  });
 });

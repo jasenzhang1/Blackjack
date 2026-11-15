@@ -3,6 +3,7 @@ import { Seg, useKeys } from '../../components/ui';
 import { cardText, rankName, SUIT_SYM, SUIT_WORD } from '../../holdem/cards';
 import {
   dealRead,
+  readBoard,
   gradeNuts,
   gradeStraights,
   gradeTypes,
@@ -22,7 +23,10 @@ import { FLUSH } from '../../holdem/evaluate';
 import { nutsTimes, saveNutsTime, type NutsTime } from '../../holdem/progress';
 import { Dealing, HCards, NextButton, RoomShell, useRoomStats, useSpot } from '../../holdem/ui';
 
-type Size = 3 | 4 | 5;
+/** Cards on the board, or 0: one hand read street by street (flop, then turn, then river). */
+type Size = 0 | 3 | 4 | 5;
+
+const STREETS = ['Flop', 'Turn', 'River'] as const;
 
 const secs = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
 
@@ -36,11 +40,17 @@ function timeSummary(times: NutsTime[]): string {
 }
 
 export default function Nuts() {
-  const [size, setSize] = useState<Size>(5);
+  const [size, setSize] = useState<Size>(0);
   const [texture, setTexture] = useState<Texture>('busy');
   const [stats, record] = useRoomStats('nuts');
   const [times, setTimes] = useState(nutsTimes);
-  const { spot, id, next } = useSpot((rand) => dealRead(rand, size, texture), [size, texture]);
+  const { spot, id, next } = useSpot(
+    (rand): BoardRead[] => {
+      const r = dealRead(rand, size || 5, texture);
+      return size ? [r] : [readBoard(r.board.slice(0, 3)), readBoard(r.board.slice(0, 4)), r];
+    },
+    [size, texture],
+  );
   const onDone = useCallback(
     (steps: boolean[], ms: number) => {
       record(steps);
@@ -52,7 +62,7 @@ export default function Nuts() {
   return (
     <RoomShell
       title="Board reading"
-      lead="Look at the board and write down everything that is possible: every hand type, every straight and the nuts. Nothing is multiple choice, and anything you miss is flagged. The clock is running."
+      lead="Look at the board and write down everything that is possible on it: every hand type, every straight and the nuts. Nothing is multiple choice, and anything you miss is flagged. The clock is running."
       stats={stats}
       lesson={<Lesson />}
       settings={
@@ -62,6 +72,7 @@ export default function Nuts() {
             value={size}
             onChange={setSize}
             options={[
+              { value: 0, label: 'Flop → Turn → River' },
               { value: 3, label: 'Flop' },
               { value: 4, label: 'Turn' },
               { value: 5, label: 'River' },
@@ -80,8 +91,26 @@ export default function Nuts() {
         </>
       }
     >
-      {spot ? <Sheet key={id} read={spot} onDone={onDone} onNext={next} /> : <Dealing />}
+      {spot ? <Hand key={id} reads={spot} onDone={onDone} onNext={next} /> : <Dealing />}
     </RoomShell>
+  );
+}
+
+/** One board, or one hand street by street: a fresh answer sheet for each street. */
+function Hand({ reads, onDone, onNext }: { reads: BoardRead[]; onDone: (steps: boolean[], ms: number) => void; onNext: () => void }) {
+  const [street, setStreet] = useState(0);
+  const last = street === reads.length - 1;
+  const walk = reads.length > 1;
+  return (
+    <Sheet
+      key={street}
+      read={reads[street]}
+      street={walk ? `${STREETS[street]} · street ${street + 1} of ${reads.length}` : STREETS[reads[0].board.length - 3]}
+      slots={walk ? 5 : 0}
+      onDone={onDone}
+      onNext={last ? onNext : () => setStreet((s) => s + 1)}
+      nextLabel={last ? (walk ? 'Next hand' : 'Next spot') : `Deal the ${STREETS[street + 1].toLowerCase()}`}
+    />
   );
 }
 
@@ -104,7 +133,21 @@ function useClock(running: boolean): number {
   return now - start.current;
 }
 
-function Sheet({ read, onDone, onNext }: { read: BoardRead; onDone: (steps: boolean[], ms: number) => void; onNext: () => void }) {
+function Sheet({
+  read,
+  street,
+  slots,
+  onDone,
+  onNext,
+  nextLabel,
+}: {
+  read: BoardRead;
+  street: string;
+  slots: number;
+  onDone: (steps: boolean[], ms: number) => void;
+  onNext: () => void;
+  nextLabel: string;
+}) {
   const [types, setTypes] = useState<Set<ReadType>>(new Set());
   const [straights, setStraights] = useState('');
   const [nuts, setNuts] = useState('');
@@ -140,7 +183,8 @@ function Sheet({ read, onDone, onNext }: { read: BoardRead; onDone: (steps: bool
     <div className="spot-layout">
       <div className="spot-table">
         <div className="panel combo-board read-board">
-          <HCards cards={read.board} size="lg" />
+          <div className="read-street">{street}</div>
+          <HCards cards={read.board} size="lg" slots={slots} />
           <div className={`read-clock num ${graded ? (graded.ok ? 'ok' : 'bad') : ''}`}>{secs(graded ? graded.ms : elapsed)}</div>
         </div>
         {graded && <AnswerKey read={read} />}
@@ -189,7 +233,7 @@ function Sheet({ read, onDone, onNext }: { read: BoardRead; onDone: (steps: bool
         {graded ? (
           <>
             <div className={`read-verdict ${graded.ok ? 'ok' : 'bad'}`}>{graded.ok ? `Perfect read in ${secs(graded.ms)}.` : `${[graded.types.ok, graded.straights.ok, graded.nuts.ok].filter(Boolean).length} of 3 parts right.`}</div>
-            <NextButton onNext={onNext} />
+            <NextButton onNext={onNext} label={nextLabel} />
           </>
         ) : (
           <button className="btn primary big" type="submit" disabled={!nuts.trim()}>
@@ -342,6 +386,12 @@ function Lesson() {
           <strong>The nuts.</strong> The strongest of the above. With nothing better available, it is a set of the top board card.
         </li>
       </ol>
+      <h4>Street by street</h4>
+      <p>
+        In the default mode one hand plays out: read the flop, then the turn card comes and you read again, then the river. Each sheet asks what a player can hold <em>right now</em>, with the cards
+        on the board so far. Watch what each new card changes: a third suited card brings flushes in, a pairing card brings full houses and quads, a connecting card adds straights, and the nuts can move
+        every street (top set on a dry flop can be crushed by the river).
+      </p>
       <h4>Writing your answers</h4>
       <p>
         Ranks: <code>A K Q J T 9 … 2</code> (<code>10</code> also works). Suits: <code>s h d c</code> or <code>♠ ♥ ♦ ♣</code>. <code>x</code> means any rank, so <code>A♥x♥</code> is the ace of hearts

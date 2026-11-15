@@ -11,7 +11,7 @@
  * "9x" or "99", and lists of straights like "56 6T TJ".
  */
 import { liveCards, makeCard, rankName, rankOf, RANK_CHARS, SUIT_SYM, SUIT_WORD, suitOf, cardText, type HCard } from './cards';
-import { categoryOf, describeScore, evaluate, FLUSH, FULL_HOUSE, QUADS, STRAIGHT, STRAIGHT_FLUSH, straightHigh, TWO_PAIR } from './evaluate';
+import { categoryOf, describeScore, slotRank, evaluate, FLUSH, FULL_HOUSE, QUADS, STRAIGHT, STRAIGHT_FLUSH, straightHigh, TWO_PAIR } from './evaluate';
 
 /** The hand types the drill asks about, strongest first. */
 export const READ_TYPES = [STRAIGHT_FLUSH, QUADS, FULL_HOUSE, FLUSH, STRAIGHT] as const;
@@ -72,6 +72,8 @@ export interface QuadsOption {
 
 export interface BoardRead {
   board: HCard[];
+  /** Rank mask of the board's cards in the flush suit (0 with no flush possible). */
+  flushBoard: number;
   /** Hand types a player can end up with as their best hand. */
   possible: Set<ReadType>;
   straights: StraightOption[];
@@ -92,20 +94,39 @@ export interface BoardRead {
  * Drops the kickers that poker players ignore when they say "the nuts": an ace-high flush is the
  * nut flush whatever its other cards, a jack-high straight is one hand. Kept: the category and the
  * ranks that name the hand (one slot, two for full houses and two pair).
+ *
+ * Flushes are ranked by the best flush card a player holds, so `flushBoard` (a rank mask of the
+ * board's cards in the flush suit) keeps every flush rank down to the first one from the hand: with
+ * the A♦ on the board, K♦x♦ (an A-K flush) beats Q♦J♦ (an A-Q flush).
  */
-export function nutKey(score: number): number {
+export function nutKey(score: number, flushBoard = 0): number {
   const cat = categoryOf(score);
+  if (cat === FLUSH) {
+    let keep = 0xf00000;
+    for (let i = 0; i < 5; i++) {
+      const r = slotRank(score, i);
+      keep |= 0xf << (16 - 4 * i);
+      if (!(flushBoard & (1 << r))) break;
+    }
+    return score & keep;
+  }
   const slots = cat === FULL_HOUSE || cat === TWO_PAIR ? 2 : 1;
   const keep = 0xf00000 | (slots === 2 ? 0x0ff000 : 0x0f0000);
   return score & keep;
 }
 
-/** A readable name for a nut key ("Flush, ace high", "Four kings"). */
+/** A readable name for a nut key ("Ace high flush", "A-K flush", "Four kings"). */
 export function nutKeyName(key: number): string {
-  const cat = categoryOf(key);
-  const s = describeScore(key);
-  if (cat === FLUSH) return s.replace('Flush, ', '').replace(/^./, (c) => c.toUpperCase()) + ' flush';
-  return s;
+  if (categoryOf(key) === FLUSH) {
+    const ranks: string[] = [];
+    for (let i = 0; i < 5; i++) {
+      const r = slotRank(key, i);
+      if (r >= 0) ranks.push(RANK_SHORT(r));
+    }
+    if (ranks.length === 1) return describeScore(key).replace('Flush, ', '').replace(/^./, (c) => c.toUpperCase()) + ' flush';
+    return `${ranks.join('-')} flush`;
+  }
+  return describeScore(key);
 }
 
 export function readBoard(board: readonly HCard[]): BoardRead {
@@ -160,6 +181,8 @@ export function readBoard(board: readonly HCard[]): BoardRead {
     }
   }
 
+  const flushBoard = flush ? suitCards[flush.suit].reduce((m, r) => m | (1 << r), 0) : 0;
+
   // Every holding a player could have: which hand types occur, and which hands are the nuts.
   const live = liveCards(b);
   const hand = [...b, 0, 0];
@@ -174,7 +197,7 @@ export function readBoard(board: readonly HCard[]): BoardRead {
       const sc = evaluate(hand, n + 2);
       const cat = categoryOf(sc);
       if (cat >= STRAIGHT) possible.add(cat as ReadType);
-      const k = nutKey(sc);
+      const k = nutKey(sc, flushBoard);
       if (k > best) {
         best = k;
         combos = [[live[i], live[j]]];
@@ -184,6 +207,7 @@ export function readBoard(board: readonly HCard[]): BoardRead {
 
   return {
     board: b,
+    flushBoard,
     possible,
     straights,
     straightFlushes,
@@ -260,7 +284,7 @@ export function describeHoldings(combos: readonly [HCard, HCard][], board: reado
   const rest = combos.filter(([a, b]) => left.has(comboId(a, b))).map(([a, b]) => (a > b ? [a, b] : [b, a]) as [HCard, HCard]);
   rest.sort((x, y) => y[0] - x[0] || y[1] - x[1]);
   for (const [a, b] of rest) out.push(cardText(a) + cardText(b));
-  return out;
+  return out.length > 10 ? [...out.slice(0, 9), `${out.length - 9} more`] : out;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -365,7 +389,7 @@ export function gradeNuts(read: BoardRead, raw: string): NutGrade {
   const keys = combos.map(([a, b]) => {
     hand[n] = a;
     hand[n + 1] = b;
-    return nutKey(evaluate(hand, n + 2));
+    return nutKey(evaluate(hand, n + 2), read.flushBoard);
   });
   const worst = Math.min(...keys);
   const bestK = Math.max(...keys);
